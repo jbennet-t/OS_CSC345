@@ -1,35 +1,35 @@
 #include <stdio.h>
 
-float total_price(int qty, float unit_price)
+float power_usage(int qty, float powerCost)
 {
-    float t_price = 0.0f;
+    float totalCost = 0.0f;
 
-    t_price = qty * unit_price;
+    totalCost = qty * powerCost;
 
-    return t_price;
+    return totalCost;
 }
 
 int main(int argc, char** argv)
 {
-    int apple = 10;
-    float apple_price = 500.0;
+    int machineA = 15;
+    float mA_powerCost = 700.0;
 
-    int banana = 5;
-    float banana_price = 10.50;
+    int machineB = 9;
+    float mB_powerCost = 900.0;
 
-    float total_prices[2];
+    float total_costs[2];
 
     for (int i = 0; i < 2, i++)
     {
         if (i == 0)
         {
-            total_prices[0] = total_price(apple, apple_price);
+            total_costs[0] = power_usage(machineA, mA_powerCost);
         }
         else if (i == 1)
         {
-            total_prices[1] = total_price(banana, banana_price);
+            total_costs[1] = power_usage(machineB, mB_powerCost);
         }
     }
 
-    printf("total price = %f\n", total_prices[0] + total_prices[1]);
+    printf("Total Power cost for machines in factory = %f\n", total_costs[0] + total_costs[1]);
 }
