@@ -19,7 +19,7 @@ int main(int argc, char** argv)
 
     float total_costs[2];
 
-    for (int i = 0; i < 2, i++)
+    for (int i = 0; i < 2; i++)
     {
         if (i == 0)
         {
