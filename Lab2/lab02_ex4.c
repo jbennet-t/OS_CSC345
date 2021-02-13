@@ -1,7 +1,7 @@
 // Jordan Sinoway
 // CSC345-02
 // Lab 2 Ex 4
-// 2/11/2021
+// 2/13/2021
 
 #include <sys/types.h>
 #include <stdlib.h>
@@ -31,9 +31,7 @@ int main(int argc, char** argv)
 
     if(id == 0)
     {
-        //PRODUCER
-        shm_fd = shm_open(name, O_CREAT | O_RDWR, 0666); //create shared mem obj
-        ptr = mmap(0, SIZE, PROT_WRITE, MAP_SHARED, shm_fd, 0); //memory map shared mem obj
+        //PRODUCER - child
         while(n > 1) 
         {
             sprintf(ptr, "%d", n);
@@ -53,9 +51,8 @@ int main(int argc, char** argv)
     }
     else
     {
-        //CONSUMER
-        //shm_fd = shm_open(name, O_RDONLY, 0666); //open mem mapped obj
-        //ptr = mmap(0, SIZE, PROT_READ, MAP_SHARED, shm_fd, 0);
+        //CONSUMER - parent
+        wait(NULL); //waiting for child process to finish
 
         printf("%s\n",(char *)ptr); //read and print from shared mem object
 
