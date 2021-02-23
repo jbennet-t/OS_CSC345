@@ -1,3 +1,8 @@
+// Jordan Sinoway
+// CSC345-02
+// Lab 3 Ex 2
+// 2/23/2021
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
