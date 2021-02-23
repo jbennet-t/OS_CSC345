@@ -9,32 +9,32 @@ int* nums;
 int r_min;
 int r_max;
 
-void* myMin(void* param)
+void* myMin(void* param)//min calculation
 {
     int i;
     r_min = nums[0];
     for (i = 0; i < len; ++i)
     {
-        if(r_min > nums[i])
+        if(r_min > nums[i]) //if item is smaller, new min
             r_min = nums[i];
     }
     pthread_exit(0);
 }
 
-void* myMax(void* param)
+void* myMax(void* param)//max calculation
 {
     int i;
     r_max = nums[0];
     for (i = 0; i < len; ++i)
     {
-        if(r_max < nums[i])
+        if(r_max < nums[i])//if item is bigger, new max
             r_max = nums[i];
     }
     pthread_exit(0);
 }
 
 float r_avg;
-void* myAvg(void* param)
+void* myAvg(void* param)//average calculation
 {
     int i;
     r_avg = 0.0f;
@@ -47,7 +47,7 @@ void* myAvg(void* param)
 }
 
 float r_med;
-void *myMedian(void *param)
+void *myMedian(void *param)//median calculation
 {
     int i, j, temp;
 
@@ -80,7 +80,7 @@ void *myMedian(void *param)
 }
 
 float r_stndev;
-void* myStndev(void* param)
+void* myStndev(void* param) //standard deviation calculation
 {
     int i = 0;
     int sum = 0;
@@ -90,13 +90,13 @@ void* myStndev(void* param)
     {
         mean += nums[i];
     }
-    mean /= len;
+    mean /= len; //calculate mean
 
     for (i=0;i<len;++i)
     {
         sum += pow(nums[i] - mean, 2); //sum of differences^2
     }
-    r_stndev = sqrt(sum / len);//sqrt(variance) = stddev
+    r_stndev = sqrt(sum / len); //sqrt(variance) = stddev
 
     pthread_exit(0);
 }
@@ -111,7 +111,6 @@ int main(int argc, char** argv)
         nums[i] = atoi(argv[i+1]);
     }
 
-    //add median and standard deviation
     pthread_t tid1;
     pthread_t tid2;
     pthread_t tid3;
