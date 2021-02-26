@@ -21,7 +21,7 @@ int main(void)
     char str[MAX_LINE/2+1]; /* temp for cmd line input, not a pointer so it can be stepped through */
     char *cmd; /* holds arguements from cmd line*/
     char *token; /* holds cmd after being tokenized */
-    char *history; /* holds prev command */
+    char *history = "0"; /* holds prev command */
 
     int should_run = 1; /* flag for exiting program */
     int len; /* input command length */
@@ -34,7 +34,8 @@ int main(void)
 
 
     pid_t pid; /*process id*/
-    pid_t pid_pipe; /*pipe process id for pipe*/
+    pid_t pid_pipe; /*pipe process id*/
+
 
     while(should_run)
     {
@@ -63,14 +64,19 @@ int main(void)
         /* check for history command,"!!" */
         if(strcmp(str, "!!") == 0)
         {
+            if(strcmp(history, "0") == 0) /* if nothing in history */
+            {
+                printf("No commands in history.\n");
+            }
+
             cmd = history; /* last thing stored in history variable is now current cmd */
-            history = malloc(strlen(cmd) * sizeof(char)); /* sets history to pointer */
+            history = malloc((MAX_LINE/2+1) * sizeof(char)); /* sets history to pointer */
             memcpy(history, cmd, strlen(cmd)); /*stores new cmd in history location */
         }
         else if(str[0] != '\n' && str[0] != '\0') /*if not history cmd, proceed normally */
         {
             cmd = str;
-            history = malloc(strlen(cmd) * sizeof(char));
+            history = malloc((MAX_LINE/2+1) * sizeof(char));
             memcpy(history, str, len);
         }
        
@@ -91,19 +97,26 @@ int main(void)
             token = strtok(NULL, " "); /* clearing token*/
             argc++;
         }
+
         args[argc] = '\0'; /* set last arguement to NULL so execvp() terminates*/
-
-
-        /* exit case */
-        if(strcmp(str, "exit") == 0)
-        {
-            exit(0);
-        }
 
         /* directory change */
         if(strcmp(args[0], "cd") == 0) /*if first token == cd */
         {
-            chdir(args[1]); /* cd to 2nd token */
+            if(chdir(args[1]) == 0) /* if valid cd */
+            {
+                chdir(args[1]); /* cd to 2nd token */
+            }
+            else
+            {
+                perror("Invalid cd");
+            }
+        }
+
+        /* exit case */
+        if(strcmp(args[0], "exit") == 0)
+        {
+            exit(0);
         }
         
         /* background process - if last argument is "&"" */
