@@ -63,9 +63,9 @@ int main(void)
         /* check for history command,"!!" */
         if(strcmp(str, "!!") == 0)
         {
-            cmd = history;
-            history = malloc(strlen(cmd) * sizeof(char));
-            memcpy(history, cmd, strlen(cmd));
+            cmd = history; /* last thing stored in history variable is now current cmd */
+            history = malloc(strlen(cmd) * sizeof(char)); /* sets history to pointer */
+            memcpy(history, cmd, strlen(cmd)); /*stores new cmd in history location */
         }
         else if(str[0] != '\n' && str[0] != '\0') /*if not history cmd, proceed normally */
         {
@@ -199,7 +199,7 @@ int main(void)
                     }
                 }
                 else /* invoke execvp() */
-                    execvp(args[0],args); /* executing files */
+                    execvp(args[0],args); /* executing all other commands, i.e ls,date,...etc. */
             }
             else
             {
