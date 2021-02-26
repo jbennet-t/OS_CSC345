@@ -60,14 +60,14 @@ int main(void)
             exit(0);
         }
 
-        /* set newline charcter from \n to NULL */
+        /* preallocate mem for command string */
+        cmd = malloc(sizeof(str) * sizeof(char)); // 41 * 1 byte
+
+        /* set newline charcter from \n to NULL for ease of parsing */
         if(str[len-1] == '\n')
         {
             str[len-1] = '\0';
         }
-
-        /* preallocate mem for command string */
-        cmd = malloc(sizeof(str) * sizeof(char)); // 41 * 1 byte
 
         /* check for history command,"!!" */
         if(strcmp(str, "!!") == 0)
@@ -80,6 +80,7 @@ int main(void)
             cmd = history; /* last thing stored in history variable is now current cmd */
             history = malloc((MAX_LINE/2+1) * sizeof(char)); /* sets history to pointer */
             memcpy(history, cmd, strlen(cmd)); /*stores new cmd in history location */
+            printf("%s\n", cmd); /* echos command */
         }
         else if(str[0] != '\n' && str[0] != '\0') /*if not history cmd, proceed normally */
         {
@@ -117,7 +118,7 @@ int main(void)
             }
             else
             {
-                perror("Invalid cd");
+                perror("Invalid cd");/* if wrong cd cmd */
             }
         }
         
@@ -201,7 +202,7 @@ int main(void)
                     {
                         wait(NULL);
 
-                        /* redirection for STDIN to pipe */
+                        /* redirection for standard in to pipe */
                         dup2(pipefd[0],STDIN_FILENO);
                         close(pipefd[1]);
 
@@ -209,8 +210,10 @@ int main(void)
                         execvp(args[pipe_process + 1], &args[pipe_process + 1]);
                     }
                 }
-                else /* invoke execvp() */
+                else
+                { /* call execvp() */
                     execvp(args[0],args); /* executing all other commands, i.e ls,date,...etc. */
+                }
             }
             else
             {
