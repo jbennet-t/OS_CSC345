@@ -52,6 +52,14 @@ int main(void)
         fgets(str,MAX_LINE,stdin); /*reading # of MAX_LINE charcters from stdin, and storing them into str */
         len = strlen(str);
 
+
+        /* exit case */
+        if(strcmp(str, "exit\n") == 0)
+        {
+            printf("Exited Shell\n");
+            exit(0);
+        }
+
         /* set newline charcter from \n to NULL */
         if(str[len-1] == '\n')
         {
@@ -111,12 +119,6 @@ int main(void)
             {
                 perror("Invalid cd");
             }
-        }
-
-        /* exit case */
-        if(strcmp(args[0], "exit") == 0)
-        {
-            exit(0);
         }
         
         /* background process - if last argument is "&"" */
