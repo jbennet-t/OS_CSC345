@@ -20,17 +20,17 @@ int main(void)
     char *args[MAX_LINE/2+1]; /* command line arguments */
     char str[MAX_LINE/2+1]; /* temp for cmd line input, not a pointer so it can be stepped through */
     char *cmd; /* holds arguements from cmd line*/
-    char *token;
-    char *history;
+    char *token; /* holds cmd after being tokenized */
+    char *history; /* holds prev command */
 
-    int should_run = 1; /* flag to determine when to exit programs */
+    int should_run = 1; /* flag for exiting program */
     int len; /* input command length */
-    int argc; /* arguement counter */
-        int background_process;     /* flag to determine when to run a process in the background -- & */
-    int redirect_out;           /* flag to determine file redirection OUT -- > */
-    int redirect_in;            /* flag to determine file redirection IN  -- < */
-    int pipe_process;           /* flag to determine if the pipe operator is used */ 
-    int pipefd[2];              /* pipe file descriptor */
+    int argc; /* argument counter */
+    int background_process; /* flag for background process "&" */
+    int redirect_out; /* lag for file redirection out ">"" */
+    int redirect_in; /*flag for file redirection in "<" */
+    int pipe_process; /*flag for pipe operator "|" */ 
+    int pipefd[2]; /*pipe file descriptor*/
 
 
     pid_t pid; /*process id*/
@@ -70,7 +70,7 @@ int main(void)
         else if(str[0] != '\n' && str[0] != '\0') /*if not history cmd, proceed normally */
         {
             cmd = str;
-            history = malloc(MAX_LINE/2+1 * sizeof(char));
+            history = malloc(strlen(cmd) * sizeof(char));
             memcpy(history, str, len);
         }
        
@@ -158,12 +158,8 @@ int main(void)
                     close(fdIn);
                 }
 
-                /* 
-                * use | pipe to allow output of one command serve as input for another
-                * have child create another child and use dup2()
-                * assumption: 1 pipe command and no redirect ops at the same time
-                */
-
+                /* "|" pipe allows output from 1st command to serve as input to another */
+                /* assuming no redirect op at same time */
                 if(pipe_process)
                 {
                     /* create pipe and handle errors*/
@@ -186,7 +182,7 @@ int main(void)
                         /* execute first argument */
                         execvp(args[0],args);
                     }
-                    else if (pid_pipe > 0) /* parent process #2*/
+                    else if (pid_pipe > 0) /* parent process #2 */
                     {
                         wait(NULL);
 
@@ -206,7 +202,7 @@ int main(void)
                 fprintf(stderr,"You have zero arguments.\n");
             }
         }
-        else if(pid > 0) // Parent process #1
+        else if(pid > 0) /* Parent process #1 */
         {
             /* invoke wait unless command included & */
             if(!background_process)
