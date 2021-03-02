@@ -37,12 +37,26 @@ int main(int argc, char *argv[])
     }
 
     // set the scheduling policy - FIFO, RR, or OTHER
-    if (pthread_attr_setschedpolicy(&attr, SCHED_FIFO) != 0)
+    if (pthread_attr_setschedpolicy(&attr, SCHED_RR) != 0)
         fprintf(stderr, "Unable to set policy.\n");
 
     // create the threads
     for (i=0;i<NUM_THREADS;i++)
         pthread_create(&tid[i],&attr,runner,NULL);
+
+
+    // get the current scheduling policy
+    if (pthread_attr_getschedpolicy(&attr, &policy) != 0)
+        fprintf(stderr, "Unable to get policy.\n");
+    else
+    {
+        if (policy == SCHED_OTHER) 
+            printf("SCHED_OTHER\n");
+        else if (policy == SCHED_RR) 
+            printf("SCHED_RR\n");
+        else if (policy == SCHED_FIFO) 
+            printf("SCHED_FIFO\n");
+    }
 
     for (i=0;i<NUM_THREADS;i++)
         pthread_join(tid[i],NULL);
