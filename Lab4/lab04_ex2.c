@@ -1,6 +1,6 @@
 // Jordan Sinoway
 // CSC345-02
-// Lab 4 Ex 1
+// Lab 4 Ex 2
 // 2/25/2021
 
 #include <pthread.h>
@@ -8,10 +8,10 @@
 
 #define NUM_THREADS 5
 
-/* Each thread will begin control in this function */
+// Each thread will begin control in this function
 void *runner(void *param)
 {
-    /* do some work ... */
+    // do some work ...
     //printf("nice\n");
     pthread_exit(0);
 }
@@ -21,9 +21,9 @@ int main(int argc, char *argv[])
     int i, policy;
     pthread_t tid[NUM_THREADS];
     pthread_attr_t attr;
-    pthread_attr_init(&attr); /* get default attributes */
+    pthread_attr_init(&attr); // get default attributes
 
-    /* get the current scheduling policy */
+    // get the current scheduling policy
     if (pthread_attr_getschedpolicy(&attr, &policy) != 0)
         fprintf(stderr, "Unable to get policy.\n");
     else
@@ -36,11 +36,11 @@ int main(int argc, char *argv[])
             printf("SCHED_FIFO\n");
     }
 
-    /* set the scheduling policy - FIFO, RR, or OTHER */
+    // set the scheduling policy - FIFO, RR, or OTHER
     if (pthread_attr_setschedpolicy(&attr, SCHED_FIFO) != 0)
         fprintf(stderr, "Unable to set policy.\n");
 
-    /* create the threads */
+    // create the threads
     for (i=0;i<NUM_THREADS;i++)
         pthread_create(&tid[i],&attr,runner,NULL);
 
