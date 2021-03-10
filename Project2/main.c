@@ -50,21 +50,23 @@ int main(int argc, char** argv)
 {
     int option = atoi(argv[1]);
     int num_threads; /*selecting number of threads via user input for option*/
-
-    int sudoku_table[9][9];
-    int i, j;
-
+    
     printf("BOARD STATE IN input.txt\n");
 
     FILE *input;
-    input = fopen('input.txt', "r");
+    input = fopen("input.txt","r");
 
-    for(i = 0; i < 9; i++)
+    /* Initialize board */
+    int sudoku_table[9][9], i, j;
+
+
+    /* Read and assign sudoku board from input.txt */
+    for (i=0;i<9;i++)
     {
-        for(j = 0; j < 9; j++)
+        for (j=0;j<9;j++)
         {
-            fscanf(input, "%ld", &sudoku_table[i][j]);
-            printf("%d", sudoku_table[i][j]);
+            fscanf(input, "%1d", &sudoku_table[i][j]);
+            printf("%d ", sudoku_table[i][j]);
         }
         printf("\n");
     }
