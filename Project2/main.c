@@ -156,6 +156,9 @@ int main(int argc, char** argv) {
         printf("\n");
     }
 
+	clock_t t;
+	t = clock();
+
 	if(option == 1) {
 		num_threads = 11;
 		//printf("11 threads to be used...\n");
@@ -169,8 +172,6 @@ int main(int argc, char** argv) {
 
 	pthread_t threads[num_threads];
 	
-	clock_t start_t, end_t, total_t;
-	start_t = clock();
 
 	int threadIndex = 0;	
 	if (num_threads == 27) {
@@ -218,15 +219,15 @@ int main(int argc, char** argv) {
 		pthread_join(threads[i], NULL);			// Wait for all threads to finish
 	}
 
-	end_t = clock();
-	total_t = (double)(end_t - start_t);
-	//printf("Clock Cycles Elapsed in Validation Stage: %ld\n", total_t);
+	t = clock() - t;
+	double total_time = ((double)t/CLOCKS_PER_SEC);
+	
 
 	if (invalid == 1) {
-		printf("SOLUTION: NO\n");
+		printf("SOLUTION: NO (%f seconds)\n", total_time);
 		return 0;
 	}
 
-	printf("SOLUTION: YES\n");
+	printf("SOLUTION: YES (%f seconds)\n", total_time);
 	return 0;
 }
