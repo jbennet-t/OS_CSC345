@@ -139,9 +139,7 @@ int main(int argc, char** argv) {
 	int option = atoi(argv[1]);
 	int num_threads;
 
-	printf("****************************************\n");
-	printf("Potential Soduku Solution from input.txt\n");
-	printf("****************************************\n");
+	printf("BOARD STATE IN input.txt:\n");
 
     FILE *input;
     input = fopen("input.txt","r");
@@ -158,16 +156,15 @@ int main(int argc, char** argv) {
         printf("\n");
     }
 
-	printf("****************************************\n");
 	if(option == 1) {
 		num_threads = 11;
-		printf("11 threads to be used...\n");
+		//printf("11 threads to be used...\n");
 	} else if(option == 2) {
 		num_threads = 27;
-		printf("27 threads to be used...\n");
+		//printf("27 threads to be used...\n");
 	} else if(option == 3) {
 		num_threads = 27;
-		printf("Processes to be used...\n");
+		//printf("Processes to be used...\n");
 	}
 
 	pthread_t threads[num_threads];
@@ -223,13 +220,13 @@ int main(int argc, char** argv) {
 
 	end_t = clock();
 	total_t = (double)(end_t - start_t);
-	printf("Clock Cycles Elapsed in Validation Stage: %ld\n", total_t);
+	//printf("Clock Cycles Elapsed in Validation Stage: %ld\n", total_t);
 
 	if (invalid == 1) {
-		printf("Sudoku solution is invalid!\n");
+		printf("SOLUTION: NO\n");
 		return 0;
 	}
 
-	printf("Sudoku solution is valid!\n");
+	printf("SOLUTION: YES\n");
 	return 0;
 }
