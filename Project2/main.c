@@ -70,9 +70,9 @@ void *areColsValid(void* param) {
 }
 
 // Check validity of all rows in one process
-void *areColsValid_process() {
+int areColsValid_process() {
     if (invalid == 1) {
-        exit(1);
+       return 1;
     }
 	int i, j, k, p;
 	int tempRow[9];
@@ -84,11 +84,12 @@ void *areColsValid_process() {
 			for (p = k + 1; p < 9; p++) {
 				if(tempRow[k] == tempRow[p]) {
 					invalid = 1;	// row is invalid
-					exit(1);
+					return 1;
 				}
 			}
 		}
 	}
+	return 0;
 }
 
 // Row validity check function
@@ -141,14 +142,14 @@ void *areRowsValid(void* param) {
 					pthread_exit(NULL);
 				}
 			}
-		}
+		}_exit(0);
 	}
 }
 
 // Check validity of all rows in one process
 void *areRowsValid_process() {
     if (invalid == 1) {
-        exit(1);
+       return 0;
     }
 	int i, j, k, p;
 	int tempRow[9];
@@ -160,11 +161,12 @@ void *areRowsValid_process() {
 			for (p = k + 1; p < 9; p++) {
 				if(tempRow[k] == tempRow[p]) {
 					invalid = 1;	// row is invalid
-					exit(1);
+					return 0;
 				}
 			}
 		}
 	}
+	return 0;
 }
 
 // Grid validity check function
@@ -196,9 +198,9 @@ void *is3x3Valid(void* param) {
 	pthread_exit(NULL);
 }
 
-void *is3x3Valid_process(void* param) {
+int is3x3Valid_process(void* param) {
     if (invalid == 1) {
-        exit(1);
+        return invalid;
     }
 	// Confirm that parameters indicate a valid 3x3 subsection
 	parameters *params = (parameters*) param;
@@ -206,7 +208,7 @@ void *is3x3Valid_process(void* param) {
 	int col = params->column;		
 	if (row > 6 || row % 3 != 0 || col > 6 || col % 3 != 0) {
 		fprintf(stderr, "Invalid row or column for subsection! row=%d, col=%d\n", row, col);
-		exit(1);
+		return invalid;
 	}
 	int validityArray[9] = {0};
 	int i, j;
@@ -222,7 +224,9 @@ void *is3x3Valid_process(void* param) {
 				validityArray[num - 1] = 1;		
 			}
 		}
-	}
+	};
+	printf("invalid = %d \n", invalid);
+	return invalid;
 }
 
 int main(int argc, char** argv) {	
@@ -270,7 +274,7 @@ int main(int argc, char** argv) {
 			for (j = 0; j < 9; j++) {						
 				if (i%3 == 0 && j%3 == 0) {
 					parameters *data = (parameters *) malloc(sizeof(parameters));	
-					data->row = i;		
+					data->row = i;	
 					data->column = j;
 					pthread_create(&threads[threadIndex++], NULL, is3x3Valid, data); // 3x3 subsection threads
 				}
@@ -306,69 +310,92 @@ int main(int argc, char** argv) {
 			}
 		}
 	}
-	else if (num_threads == 0) //parent/child process solving method
+	else if (num_threads == 0) //parent/child process solving method, option 3
 	{
 		int process_count = 11;
-
-		/*starting children*/
-		// for (i = 0; i < 9; i++) 
-		// {
-		// 	for (j = 0; j < 9; j++) 
-		// 	{						
-		// 		if (i%3 == 0 && j%3 == 0) {
+		
+		/*starting children*/ 
+		for (i = 0; i < 9; i++) 
+		{
+			for (j = 0; j < 9; j++) 
+			{						
+				if (i%3 == 0 && j%3 == 0) {
 					
-		// 			pid_t grid_pid = fork();
-		// 			if(grid_pid == 0)
-		// 			{
-		// 				parameters *data = (parameters *) malloc(sizeof(parameters));	
-		// 				data->row = i;		
-		// 				data->column = j;
-		// 				is3x3Valid_process(data); // 3x3 subsection threads
-		// 			}
-		// 			else
-		// 			{
-		// 				wait(NULL);
-		// 			}
-		// 		}
-		// 	}
-		// }	
+					pid_t grid_pid = fork();
+					if(grid_pid == 0)
+					{
+						parameters *data = (parameters *) malloc(sizeof(parameters));	
+						data->row = i;		
+						data->column = j;
+						int validity = is3x3Valid_process(data); // 3x3 subsection threads
+						invalid = validity;
+						printf("validity = %d \n", invalid);
+						exit(EXIT_SUCCESS);
+					}
+					else
+					{
+						int status;
+						waitpid(grid_pid, &status, 0);
+					}
+				}
+			}
+		}	
 
-
+		/*
 		pid_t col_pid = fork();
+
+		pid_t row_pid = fork();
 		if(col_pid == 0)
 		{
 			areColsValid_process();
+			exit(EXIT_SUCCESS);
+		}
+		if(col_pid < 0)
+		{
+			fprintf(stderr, "fork failed");
 		}
 		else
 		{
-			wait(NULL);
+			int status;
+			waitpid(col_pid, &status, 0);
 		}
 
-		pid_t row_pid = fork();
+		printf("pid %d \n", getpid());
 		if(row_pid == 0)
 		{
 			areRowsValid_process();
+			exit(EXIT_SUCCESS);
 			printf("here\n");
+		}
+		if(row_pid < 0)
+		{
+			fprintf(stderr, "fork failed");
 		}
 		else
 		{
-			wait(NULL);
+			int status;
+			waitpid(row_pid, &status, 0);
 			printf("here 2 \n");
 		}
 		printf("here 3 \n");
+		printf("invalid val = %d\n",invalid); */
+		
 
+		
 
 	}
 
 	
-
-	for (i = 0; i < num_threads; i++) {
-		pthread_join(threads[i], NULL);			// Wait for all threads to finish
+	if(num_threads > 0)
+	{
+		for (i = 0; i < num_threads; i++) {
+			pthread_join(threads[i], NULL);			// Wait for all threads to finish
+		}
 	}
 
 	t = clock() - t;
 	double total_time = ((double)t/CLOCKS_PER_SEC);
-	printf("Num threads run: %d\n", num_threads);
+	//printf("Num threads run: %d\n", num_threads);
 
 	if (invalid == 1) {
 		printf("SOLUTION: NO (%f seconds)\n", total_time);
