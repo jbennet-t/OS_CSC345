@@ -18,6 +18,9 @@ int sudoku[9][9];
 
 // Column validity check function
 void *isColValid(void* param) {
+    if (invalid == 1) {
+        pthread_exit(NULL);
+    }
 	// Confirm that parameters indicate a valid col subsection
 	parameters *params = (parameters*) param;
 	int row = params->row;
@@ -44,6 +47,9 @@ void *isColValid(void* param) {
 
 // Check validity of all rows in one thread
 void *areColsValid(void* param) {
+    if (invalid == 1) {
+        pthread_exit(NULL);
+    }
 	int i, j, k, p;
 	int tempRow[9];
 	for (i = 0; i < 9; i++) {
@@ -63,6 +69,9 @@ void *areColsValid(void* param) {
 
 // Row validity check function
 void *isRowValid(void* param) {
+    if (invalid == 1) {
+        pthread_exit(NULL);
+    }
 	// Confirm that parameters indicate a valid row subsection
 	parameters *params = (parameters*) param;
 	int row = params->row;
@@ -92,6 +101,9 @@ void *isRowValid(void* param) {
 
 // Check validity of all rows in one thread
 void *areRowsValid(void* param) {
+    if (invalid == 1) {
+        pthread_exit(NULL);
+    }
 	int i, j, k, p;
 	int tempRow[9];
 	for (i = 0; i < 9; i++) {
@@ -111,6 +123,9 @@ void *areRowsValid(void* param) {
 
 // Grid validity check function
 void *is3x3Valid(void* param) {
+    if (invalid == 1) {
+        pthread_exit(NULL);
+    }
 	// Confirm that parameters indicate a valid 3x3 subsection
 	parameters *params = (parameters*) param;
 	int row = params->row;
