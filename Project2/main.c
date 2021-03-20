@@ -5,6 +5,11 @@
 #include <time.h>
 #include <sys/types.h>
 #include <wait.h>
+#include <sys/mman.h>
+#include <sys/shm.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 
 // Array to track invalid threads, a value of 1 at any index means the solution is invalid
 int invalid = 0;
@@ -233,6 +238,16 @@ int main(int argc, char** argv) {
 	int option = atoi(argv[1]);
 	int num_threads;
 
+	const char* name = "COLLATZ"; //name of shared mem object
+    const int SIZE = 4096; //size of shared mem object
+	int n = 0;
+
+    void *ptr;
+    int shm_fd;
+
+    shm_fd = shm_open(name, O_CREAT | O_RDWR, 0666); //create shared mem obj
+    ftruncate(shm_fd, SIZE); //configure shared mem obj size
+    ptr = mmap(0, SIZE, PROT_WRITE, MAP_SHARED, shm_fd, 0); //memory map shared mem obj
 
 	printf("BOARD STATE IN input.txt:\n");
 
@@ -327,10 +342,11 @@ int main(int argc, char** argv) {
 						parameters *data = (parameters *) malloc(sizeof(parameters));	
 						data->row = i;		
 						data->column = j;
-						int validity = is3x3Valid_process(data); // 3x3 subsection threads
-						invalid = validity;
-						printf("validity = %d \n", invalid);
-						exit(EXIT_SUCCESS);
+						n = is3x3Valid_process(data); // 3x3 subsection threads
+						sprintf(ptr, "%d", n);
+
+						printf("validity = %s \n", (char *)ptr);
+						_Exit(EXIT_SUCCESS);
 					}
 					else
 					{
@@ -340,7 +356,7 @@ int main(int argc, char** argv) {
 				}
 			}
 		}	
-
+		printf("validity = %s \n", (char *)ptr);
 		/*
 		pid_t col_pid = fork();
 
@@ -393,11 +409,13 @@ int main(int argc, char** argv) {
 		}
 	}
 
+	shm_unlink(name); //remove the shared mem obj
+
 	t = clock() - t;
 	double total_time = ((double)t/CLOCKS_PER_SEC);
 	//printf("Num threads run: %d\n", num_threads);
 
-	if (invalid == 1) {
+	if (invalid == 1 || ((int)ptr) == 1) {
 		printf("SOLUTION: NO (%f seconds)\n", total_time);
 		return 0;
 	}
