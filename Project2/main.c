@@ -94,7 +94,6 @@ int areColsValid_process() {
 			}
 		}
 	}
-	printf("invalid = %d \n", invalid);
 	return invalid;
 }
 
@@ -148,7 +147,7 @@ void *areRowsValid(void* param) {
 					pthread_exit(NULL);
 				}
 			}
-		}_exit(0);
+		}
 	}
 }
 
@@ -238,7 +237,7 @@ int main(int argc, char** argv) {
 	int option = atoi(argv[1]);
 	int num_threads;
 
-	const char* name = "COLLATZ"; //name of shared mem object
+	const char* name = "VALIDATION"; //name of shared mem object
     const int SIZE = 4096; //size of shared mem object
 	int n = 0;
 
@@ -324,7 +323,15 @@ int main(int argc, char** argv) {
 				}
 			}
 		}
+
 	}
+	if(num_threads > 0)
+	{
+		for (i = 0; i < num_threads; i++) {
+			pthread_join(threads[i], NULL);			// Wait for all threads to finish
+		}
+	}
+
 	else if (num_threads == 0) //parent/child process solving method, option 3
 	{
 		int process_count = 11;
@@ -400,18 +407,8 @@ int main(int argc, char** argv) {
 		}
 
 
-		
-
 	}
 	int x = *ptr;
-
-	
-	if(num_threads > 0)
-	{
-		for (i = 0; i < num_threads; i++) {
-			pthread_join(threads[i], NULL);			// Wait for all threads to finish
-		}
-	}
 
 	shm_unlink(name); //remove the shared mem obj
 
