@@ -77,7 +77,7 @@ void *areColsValid(void* param) {
 // Check validity of all rows in one process
 int areColsValid_process() {
     if (invalid == 1) {
-       return 1;
+       return invalid;
     }
 	int i, j, k, p;
 	int tempRow[9];
@@ -89,12 +89,13 @@ int areColsValid_process() {
 			for (p = k + 1; p < 9; p++) {
 				if(tempRow[k] == tempRow[p]) {
 					invalid = 1;	// row is invalid
-					return 1;
+					return invalid;
 				}
 			}
 		}
 	}
-	return 0;
+	printf("invalid = %d \n", invalid);
+	return invalid;
 }
 
 // Row validity check function
@@ -152,9 +153,9 @@ void *areRowsValid(void* param) {
 }
 
 // Check validity of all rows in one process
-void *areRowsValid_process() {
+int areRowsValid_process() {
     if (invalid == 1) {
-       return 0;
+       return invalid;
     }
 	int i, j, k, p;
 	int tempRow[9];
@@ -166,12 +167,12 @@ void *areRowsValid_process() {
 			for (p = k + 1; p < 9; p++) {
 				if(tempRow[k] == tempRow[p]) {
 					invalid = 1;	// row is invalid
-					return 0;
+					return invalid;
 				}
 			}
 		}
 	}
-	return 0;
+	return invalid;
 }
 
 // Grid validity check function
@@ -230,7 +231,6 @@ int is3x3Valid_process(void* param) {
 			}
 		}
 	};
-	printf("invalid = %d \n", invalid);
 	return invalid;
 }
 
@@ -242,7 +242,7 @@ int main(int argc, char** argv) {
     const int SIZE = 4096; //size of shared mem object
 	int n = 0;
 
-    void *ptr;
+    int *ptr;
     int shm_fd;
 
     shm_fd = shm_open(name, O_CREAT | O_RDWR, 0666); //create shared mem obj
@@ -343,9 +343,14 @@ int main(int argc, char** argv) {
 						data->row = i;		
 						data->column = j;
 						n = is3x3Valid_process(data); // 3x3 subsection threads
-						sprintf(ptr, "%d", n);
+						//sprintf(ptr, "%d", n);
+						//*ptr = n;
 
-						printf("validity = %s \n", (char *)ptr);
+						if(n == 1)
+						{
+							*ptr = n;
+						}
+
 						_Exit(EXIT_SUCCESS);
 					}
 					else
@@ -356,19 +361,18 @@ int main(int argc, char** argv) {
 				}
 			}
 		}	
-		printf("validity = %s \n", (char *)ptr);
-		/*
-		pid_t col_pid = fork();
 
-		pid_t row_pid = fork();
+		pid_t col_pid = fork();
 		if(col_pid == 0)
 		{
-			areColsValid_process();
-			exit(EXIT_SUCCESS);
-		}
-		if(col_pid < 0)
-		{
-			fprintf(stderr, "fork failed");
+			n = areColsValid_process(); // cols subsection process
+			//sprintf(ptr, "%d", n);
+			if(n == 1)
+			{
+				*ptr = n;
+			}
+
+			_Exit(EXIT_SUCCESS);
 		}
 		else
 		{
@@ -376,30 +380,30 @@ int main(int argc, char** argv) {
 			waitpid(col_pid, &status, 0);
 		}
 
-		printf("pid %d \n", getpid());
+
+		pid_t row_pid = fork();
 		if(row_pid == 0)
 		{
-			areRowsValid_process();
-			exit(EXIT_SUCCESS);
-			printf("here\n");
-		}
-		if(row_pid < 0)
-		{
-			fprintf(stderr, "fork failed");
+			n = areRowsValid_process(); // cols subsection process
+			//sprintf(ptr, "%d", n);
+			if(n == 1)
+			{
+				*ptr = n;
+			}
+
+			_Exit(EXIT_SUCCESS);
 		}
 		else
 		{
 			int status;
 			waitpid(row_pid, &status, 0);
-			printf("here 2 \n");
 		}
-		printf("here 3 \n");
-		printf("invalid val = %d\n",invalid); */
-		
+
 
 		
 
 	}
+	int x = *ptr;
 
 	
 	if(num_threads > 0)
@@ -415,7 +419,7 @@ int main(int argc, char** argv) {
 	double total_time = ((double)t/CLOCKS_PER_SEC);
 	//printf("Num threads run: %d\n", num_threads);
 
-	if (invalid == 1 || ((int)ptr) == 1) {
+	if (invalid == 1 || x == 1) {
 		printf("SOLUTION: NO (%f seconds)\n", total_time);
 		return 0;
 	}
