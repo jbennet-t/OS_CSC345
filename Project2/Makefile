@@ -4,3 +4,4 @@ all:
 clean:
 	rm main
 	rm stat_analysis
+
