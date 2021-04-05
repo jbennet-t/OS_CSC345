@@ -49,10 +49,13 @@ void pr_fifo(int pages[])
     int fifo_frames[total_frames];
     int idx = 0;
 
-    for(i = 0; i < total_frames; ++i)
-    {
-        fifo_frames[i] = -1; /* intializing frames to -1 to deferntiate from other data*/
-    }
+    
+
+    // for(i = 0; i < total_frames; ++i)
+    // {
+    //     fifo_frames[i] = -1; /* intializing frames to -1 to deferntiate from other data*/
+    // }
+
 
     for(i = 0; i < total_refs; ++i) /*check if page is already in frame */
     {
@@ -85,10 +88,10 @@ void pr_lru(int pages[])
     int least[total_frames];
     int idx = 0;
 
-    for(i = 0; i < total_frames; ++i)
-    {
-        lru_frames[i] = -1; /* intializing frames to # < 0 */
-    }
+    // for(i = 0; i < total_frames; ++i)
+    // {
+    //     lru_frames[i] = -1; /* intializing frames to # < 0 */
+    // }
 
     for(i = 0; i < total_refs; ++i) /*check if page is already in frame */
     {
@@ -146,10 +149,10 @@ void pr_optimal(int pages[])
     int distance[total_frames];
     int idx = 0;
 
-    for(i = 0; i < total_frames; ++i)
-    {
-        opt_frames[i] = -1; /* intializing frames to # < 0 */
-    }
+    // for(i = 0; i < total_frames; ++i)
+    // {
+    //     opt_frames[i] = -1; /* intializing frames to # < 0 */
+    // }
 
     for(i = 0; i < total_refs; ++i) /*check if page is already in frame */
     {
