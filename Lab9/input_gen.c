@@ -1,3 +1,9 @@
+/* 
+   Jordan Sinoway
+   CSC345-02
+   Lab 9 input gen
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>

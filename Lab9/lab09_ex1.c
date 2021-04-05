@@ -1,3 +1,8 @@
+/* Jordan Sinoway
+   CSC345-02
+   Lab 9 ex 1
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -63,9 +68,9 @@ void pr_fifo(int pages[])
             for(j = 0; j < total_frames-1; ++j)
             {
                 fifo_frames[j] = fifo_frames[j+1];
-                fifo_frames[j] = pages[i];
-                pf_fifo++;
             }
+            fifo_frames[j] = pages[i];
+            pf_fifo++;
         }
     }
 }
@@ -246,7 +251,7 @@ int main(int argc, char** argv)
 
     fclose(fp);
 
-    //free(page_refs);
+    free(page_refs);
     //free(FRAME);
 
     return 0;

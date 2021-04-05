@@ -4,5 +4,3 @@ all:
 clean:
 	rm input_gen
 	rm lab09_ex1
-
-
