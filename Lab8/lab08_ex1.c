@@ -1,3 +1,8 @@
+/* Jordan Sinoway
+   CSC345-02
+   Lab 8 ex 1
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 
