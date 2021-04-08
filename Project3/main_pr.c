@@ -79,6 +79,7 @@ int main(int argc, char** argv)
         fscanf(input, "%d", &logical_address);
     }
     printf("%d addresses.\n", address_cnt);
+
     fclose(input);
     fclose(virtual);
     fclose(physical);
@@ -87,7 +88,6 @@ int main(int argc, char** argv)
     double pf_rate = page_faults_cnt / (double)address_cnt;
     double tlb_rate = tlb_hits / (double)address_cnt;
 
-    /* Will not run out of memory with 256 frames */
     printf("Page Faults: %d\tPage Fault Rate: %.2f\n", page_faults_cnt, pf_rate);
     printf("TLB Hits: %d\t TLB Rate: %.3f\n", tlb_hits, tlb_rate);
 
@@ -97,15 +97,15 @@ int main(int argc, char** argv)
 void getPage(int logical_address)
 {
     /* Declare page (0x0000FF00) and offset (0x000000FF) */
-    uint8_t page = logical_address >> 8 & 0xFF;
+    uint8_t page = logical_address >> 8 & 0xFF; 
     uint8_t offset = logical_address & 0xFF;
     int frame = -1;
     int i;
 
     /* Search TLB for page and set frame number if found */
-    for (i=0;i<MAX_TLB_ENTRIES;i++)
+    for(i = 0; i < TLBPos; i++)
     {
-        if (TLB[i].page_num == page)
+        if(TLB[i].page_num == page)
         {
             frame = TLB[i].frame_num;
             tlb_hits++;
@@ -114,11 +114,11 @@ void getPage(int logical_address)
     }
 
     /* If not found, search page table and set frame number if found */
-    if (frame == -1)
+    if(frame == -1)
     {
-        for (i=0;i<PTPos;i++)
+        for(i = 0;i < PTPos; i++)
         {
-            if (page_table[i].page_num == page)
+            if(page_table[i].page_num == page)
             {
                 /* Page was found - get frame */
                 frame = page_table[i].frame_num;
@@ -129,7 +129,7 @@ void getPage(int logical_address)
 
     /* If not found, declare page fault and read in frame number from backing_store (readFromStore) */
     /* Update page table entry, restart address conversion and access procedure */
-    if (frame == -1)
+    if(frame == -1)
     {
         readStore(page);
         page_faults_cnt++;
@@ -140,14 +140,11 @@ void getPage(int logical_address)
     /* Insert page num and frame into TLB if not there already */
     TLBInsert(page, frame);
 
-    /* logical_address -> out1.txt */
-    fprintf(virtual,"%d\n",logical_address);
-    /* frame_num * 256 -> out2.txt */
+    fprintf(virtual,"%d\n",logical_address); /* logical_address -> out1.txt */
     int physical_address = frame * PAGE_SIZE + offset;
-    fprintf(physical,"%d\n",physical_address);
-    /* Get signed byte value stored in physical_memory using frame_num and offset -> out3.txt */
+    fprintf(physical,"%d\n",physical_address); /* frame_num * 256 -> out2.txt */
     int8_t value = physical_memory[frame][offset];
-    fprintf(val,"%d\n",value);
+    fprintf(val,"%d\n",value); /* Get signed byte value stored in physical_memory using frame_num and offset -> out3.txt */
 }
 
 void readStore(int page_num)
@@ -157,31 +154,33 @@ void readStore(int page_num)
 
     /* Declare buffer to hold 256 bytes */
     int8_t buf[256];           
-    int i, j;
+    int i;
 
-    /* Open BACKING_STORE.bin */
+    /* open BACKING_STORE.bin */
     backing_store = fopen("BACKING_STORE.bin","rb");
 
     /* Set file pointer at page number position */
-    if (fseek(backing_store, page_num*BYTES_PER_INPUT, SEEK_SET) != 0)
+    if(fseek(backing_store, page_num*BYTES_PER_INPUT, SEEK_SET) != 0)
     {
         fprintf(stderr,"Error seeking through backing_store\n");
     }
 
     /* Read 256 bytes to buffer array */
-    if (fread(buf, sizeof(int8_t), BYTES_PER_INPUT, backing_store) == 0)
+    if(fread(buf, sizeof(int8_t), BYTES_PER_INPUT, backing_store) == 0)
     {
         fprintf(stderr, "Error reading through file\n");
     }
 
-    /* Close backing_store */
-    fclose(backing_store);
+    fclose(backing_store); /* close BACKING_STORE.bin */
 
-    /* Physical memory has not filled */
-    if (framePos < MAX_FRAMES)
+    /* if physical memory has not filled */
+    if(framePos < MAX_FRAMES)
     {
         /* Update frame in physical memory with 256 bytes */
-        for (i=0;i<BYTES_PER_INPUT;++i) physical_memory[framePos][i] = buf[i];
+        for(i = 0;i < BYTES_PER_INPUT; ++i)
+        {
+            physical_memory[framePos][i] = buf[i];
+        }
 
         /* Update page table with page and frame */
         page_table[PTPos].page_num = page_num;
@@ -194,16 +193,18 @@ void readStore(int page_num)
     else /* Physical memory/PT is filled - use FIFO for replacement */
     {
         int j;
-        for (j=0;j<MAX_FRAMES-1;j++) 
+        for(j = 0;j < MAX_FRAMES-1; j++) 
         {
             /* Push top mem out of queue */
-            for (i=0;i<BYTES_PER_INPUT;++i) physical_memory[j][i] = physical_memory[j+1][i];  
+            for(i = 0; i < BYTES_PER_INPUT; ++i) 
+            physical_memory[j][i] = physical_memory[j+1][i];  
             /* Push top page out of queue */
             page_table[j] = page_table[j+1];            
         }
 
         /* Add new memory to back of physical memory */
-        for (i=0;i<BYTES_PER_INPUT;++i) physical_memory[j][i] = buf[i];
+        for(i = 0;i < BYTES_PER_INPUT; ++i) 
+        physical_memory[j][i] = buf[i];
 
         /* Add new page and frame to back of page table */
         page_table[j].page_num = page_num;             
@@ -245,7 +246,7 @@ void TLBInsert(int page_num, int frame_num) /* Insert page and frame into TLB */
     else /* If page num was found in TLB */
     {
         /* Increment position of everything starting from page index */
-        for( i = i; i < MAX_TLB_ENTRIES-1; i++)
+        for(i = i; i < MAX_TLB_ENTRIES-1; i++)
         {
             TLB[i] = TLB[i+1];
         }

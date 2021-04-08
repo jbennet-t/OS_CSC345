@@ -78,6 +78,7 @@ int main(int argc, char** argv)
         fscanf(input, "%d", &logical_address);
     }
     printf("%d addresses.\n", address_cnt);
+    
     fclose(input);
     fclose(virtual);
     fclose(physical);
@@ -86,7 +87,6 @@ int main(int argc, char** argv)
     double pf_rate = page_faults_cnt / (double)address_cnt;
     double tlb_rate = tlb_hits / (double)address_cnt;
 
-    /* Will not run out of memory with 256 frames */
     printf("Page Faults: %d\tPage Fault Rate: %.2f\n", page_faults_cnt, pf_rate);
     printf("TLB Hits: %d\t TLB Rate: %.3f\n", tlb_hits, tlb_rate);
 
@@ -96,7 +96,7 @@ int main(int argc, char** argv)
 void getPage(int logical_address)
 {
     /* Declare page (0x0000FF00) and offset (0x000000FF) */
-    uint8_t page = logical_address >> 8 & 0xFF; // unsure whether these should be ints or not
+    uint8_t page = logical_address >> 8 & 0xFF;
     uint8_t offset = logical_address & 0xFF;
     int frame = -1;
     int i;
@@ -243,7 +243,7 @@ void TLBInsert(int page_num, int frame_num) /* Insert page and frame into TLB */
     else /* If page num was found in TLB */
     {
         /* Increment position of everything starting from page index */
-        for( i = i; i < MAX_TLB_ENTRIES-1; i++)
+        for(i = i; i < MAX_TLB_ENTRIES-1; i++)
         {
             TLB[i] = TLB[i+1];
         }
