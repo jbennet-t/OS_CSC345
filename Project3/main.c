@@ -15,7 +15,7 @@
 #define PAGE_SIZE 256           /* page size in bytes*/
 #define MAX_TLB_ENTRIES 16      /* max TLB entries */
 #define FRAME_SIZE 256          /* frame size in bytes*/
-#define MAX_FRAMES 256          /* maxi frames in physical memory */
+#define MAX_FRAMES 512         /* max frames in physical memory */
 
 #define BYTES_PER_INPUT 256     /* # of bytes to read from BACKING_STORE.bin */
 
