@@ -16,7 +16,7 @@
 #define PAGE_SIZE 256           /* page size in bytes*/
 #define MAX_TLB_ENTRIES 16      /* max TLB entries */
 #define FRAME_SIZE 256          /* frame size in bytes*/
-#define MAX_FRAMES 256          /* maxi frames in physical memory */
+#define MAX_FRAMES 128          /* maxi frames in physical memory */
 
 #define BYTES_PER_INPUT 256     /* # of bytes to read from BACKING_STORE.bin */
 
@@ -178,9 +178,7 @@ void readStore(int page_num)
     {
         /* Update frame in physical memory with 256 bytes */
         for(i = 0;i < BYTES_PER_INPUT; ++i)
-        {
-            physical_memory[framePos][i] = buf[i];
-        }
+        physical_memory[framePos][i] = buf[i];
 
         /* Update page table with page and frame */
         page_table[PTPos].page_num = page_num;
@@ -214,57 +212,26 @@ void readStore(int page_num)
 
 void TLBInsert(int page_num, int frame_num) /* Insert page and frame into TLB */
 {
-    int i, j;
+    int i;
 
-    /* Break if already on the TLB and save index */
-    for(i = 0; i < TLBPos; ++i)
-    {
-        if(TLB[i].page_num == page_num) 
-        break;
-    }
-
-    /* If page number was not found in TLB */
-    if(i == TLBPos)
-    {
-        /* Insert to TLB if there is still room */
-        if(TLBPos < MAX_TLB_ENTRIES)
-        {
-            TLB[TLBPos].page_num = page_num;
-            TLB[TLBPos].frame_num = frame_num;
-        }
-        else /* Otherwise move everything over and insert page frame on end */
-        {
-            for(i = 0; i < MAX_TLB_ENTRIES-1; i++)
-            {
-                TLB[i] = TLB[i+1];
-            }
-            /* Insert new page frame */
-            TLB[MAX_TLB_ENTRIES-1].page_num = page_num;
-            TLB[MAX_TLB_ENTRIES-1].frame_num = frame_num;
-        }
-    }
-    else /* If page num was found in TLB */
-    {
-        /* Increment position of everything starting from page index */
-        for(i = i; i < MAX_TLB_ENTRIES-1; i++)
-        {
-            TLB[i] = TLB[i+1];
-        }
-        /* If there is still room, put page and frame on the end */
-        if(TLBPos < MAX_TLB_ENTRIES)
-        {
-            TLB[TLBPos].page_num = page_num;
-            TLB[TLBPos].frame_num = frame_num;
-        }
-        else /* Otherwise, place page and frame on num entries - 1 */
-        {
-            TLB[TLBPos-1].page_num = page_num;
-            TLB[TLBPos-1].frame_num = frame_num;
-        }
-    }
+    /* Table has not been filled */
     if(TLBPos < MAX_TLB_ENTRIES)
     {
+        TLB[TLBPos].page_num = page_num;
+        TLB[TLBPos].frame_num = frame_num;
         TLBPos++;
     }
+    else /* if Table is filled, then use LRU*/ 
+    {
+        //TLBPos = 0;
+        for(i = 0; i < MAX_TLB_ENTRIES-1; i++)
+        {
+            TLB[i] = TLB[i+1]; /* push all numbers in queue left, popping top out */
+        }
+        /* Insert new page frame */
+        TLB[i].page_num = page_num;
+        TLB[i].frame_num = frame_num; 
+    }
 }
+
 
