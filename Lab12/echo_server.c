@@ -1,3 +1,9 @@
+/*
+Jordan Sinoway
+CSC 345-02
+Lab12 echo_server.c
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -90,6 +96,8 @@ int main(int argc, char *argv[])
 	char buffer[256];
 	int n;
 
+	do {
+
 	// always clear buffer before receiving a new message
 	memset(buffer, 0, 256);
 	n = recv(newsockfd, buffer, 255, 0);
@@ -102,6 +110,8 @@ int main(int argc, char *argv[])
 	n = send(newsockfd, buffer, strlen(buffer), 0);
 	if (n < 0) error("ERROR writing to socket");
 	
+	} while (strlen(buffer) > 1);
+
 	// close connection
 	close(newsockfd);
 

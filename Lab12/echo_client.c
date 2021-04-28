@@ -1,3 +1,9 @@
+/*
+Jordan Sinoway
+CSC 345-02
+Lab12 echo_client.c
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -57,6 +63,8 @@ int main(int argc, char *argv[])
 	char buffer[256];
 	int n;
 
+	do{
+
 	//-------------------------------------------
 	printf("Please enter the message: ");
 	memset(buffer, 0, 256);
@@ -75,6 +83,8 @@ int main(int argc, char *argv[])
 	printf("Message from server: %s\n", buffer);
 	//-------------------------------------------
 	
+	} while(strlen(buffer) > 1);
+
 	close(sockfd);
 	
 	return 0;
