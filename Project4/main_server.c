@@ -14,8 +14,27 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <pthread.h>
+#include <ctype.h>
 
 #define PORT_NUM 1004
+
+void error(const char *msg)
+{
+	perror(msg);
+	exit(1);
+}
+
+typedef struct _USR {
+	int clisockfd;		// socket file descriptor
+	struct _USR* next;	// for linked list queue
+    char* username; //client's name
+    int room; //what chat room user is in
+    char* color;
+
+} USR;
+
+USR *head = NULL;
+USR *tail = NULL;
 
 void print_clients()
 {
@@ -37,41 +56,41 @@ void print_clients()
     return;
 }
 
-void error(const char *msg)
+//adding user to end of linked list
+void add_tail(int newclisockfd, char* name_new, char* color_new, int roomnum) //added name, roomnum
 {
-	perror(msg);
-	exit(1);
-}
-
-typedef struct _USR {
-	int clisockfd;		// socket file descriptor
-	struct _USR* next;	// for linked list queue
-    char* username; //client's name
-    int room; //what chat room user is in
-    char* color;
-
-} USR;
-
-USR *head = NULL;
-USR *tail = NULL;
-
-
-//adding user
-void add_tail(int newclisockfd, char* name, char* color) //added name, color
-{
-	if (head == NULL) {
+	if (head == NULL) 
+    {
 		head = (USR*) malloc(sizeof(USR));
 		head->clisockfd = newclisockfd;
 
-        head->username = 
+        head->room = roomnum; //doesn't need malloc bc int
+
+        head->username = (char*)malloc(strlen(name_new)* sizeof(char)); //malloc bc string
+        strcpy(head->username, name_new);
+
+        head->color = (char*)malloc(strlen(color_new)* sizeof(char)); //malloc bc string
+        strcpy(head->color, color_new);
 
 
 		head->next = NULL;
 		tail = head;
 
-	} else {
+	}
+    else 
+    {
 		tail->next = (USR*) malloc(sizeof(USR));
 		tail->next->clisockfd = newclisockfd;
+
+        tail->next->room = roomnum;
+
+        tail->next->username = (char*)malloc(strlen(name_new)* sizeof(char)); //malloc bc string
+        strcpy(tail->next->username, name_new);
+
+        tail->next->color = (char*)malloc(strlen(color_new)* sizeof(char)); //malloc bc string
+        strcpy(tail->next->color, color_new);
+
+
 		tail->next->next = NULL;
 		tail = tail->next;
 	}
@@ -191,8 +210,29 @@ int main(int argc, char *argv[])
 			(struct sockaddr *) &cli_addr, &clen);
 		if (newsockfd < 0) error("ERROR on accept");
 
-		printf("Connected: %s\n", inet_ntoa(cli_addr.sin_addr));
-		add_tail(newsockfd); // add this new client to the client list
+        printf("New Client Connecting...\n");
+
+        //room number
+        //add actual code here
+        int room_num = 0;
+
+        //color
+        //add actual color code here
+        char* user_color;
+
+        //pulling username from client input
+        char username[32];
+        memset(username, 0, 32); //setting memory
+        int nrcv = recv(newsockfd, username, 32, 0);
+        if(nrcv < 0)
+        {
+            error("Error recv() failed");
+        }
+
+        printf("Connected: %s - %s\n", inet_ntoa(cli_addr.sin_addr), username);
+
+
+		add_tail(newsockfd, username, user_color, room_num); // add this new client to the client list
 
 		// prepare ThreadArgs structure to pass client socket
 		ThreadArgs* args = (ThreadArgs*) malloc(sizeof(ThreadArgs));
