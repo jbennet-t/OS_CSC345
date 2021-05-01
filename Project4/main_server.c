@@ -69,7 +69,7 @@ void print_clients()
 
     while (cur != NULL)
     {
-        printf("User: [%s] - [%d]\n", cur->username, cur->room);
+        printf("User: [%s] - Room: [%d]\n", cur->username, cur->room);
         cur = cur->next;
     }
 
@@ -244,6 +244,7 @@ int main(int argc, char *argv[])
         //color
         //add actual color code here
         char* user_color = rand_color();
+		printf("Assigned color: %s\n", user_color);
 
         //pulling username from client input
         char username[32];

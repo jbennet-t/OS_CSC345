@@ -88,7 +88,7 @@ void* thread_main_send(void* args)
 
 int main(int argc, char *argv[])
 {
-	if (argc < 2) error("Please speicify hostname");
+	if (argc < 2) error("Please specify hostname");
 
 	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sockfd < 0) error("ERROR opening socket");
@@ -105,6 +105,7 @@ int main(int argc, char *argv[])
 	int status = connect(sockfd, 
 			(struct sockaddr *) &serv_addr, slen);
 	if (status < 0) error("ERROR connecting");
+	printf("Your first message will be your username");
 
 	pthread_t tid1;
 	pthread_t tid2;
