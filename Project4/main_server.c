@@ -16,7 +16,7 @@
 #include <pthread.h>
 #include <ctype.h>
 
-#define PORT_NUM 6669
+#define PORT_NUM 6111
 
 void error(const char *msg)
 {
@@ -62,19 +62,20 @@ char* rand_color() {
 // Jordan Sinoway
 void print_clients()
 {
-    USR* cur = tail;
+    USR* cur = head;
     printf("The following clients are connected: \n");
 
-    while (cur != NULL)
-    {
-        printf("User: [%s] - Room: [%d]\n", cur->username, cur->room);
-        cur = cur->next;
-    }
-
-    if(head = NULL)
+	if (head == NULL)
     {
         printf("No clients connected \n");
     }
+    else {
+		while (cur != NULL)
+    	{
+        	printf("User: [%s] - Room: [%d]\n", cur->username, cur->room);
+        	cur = cur->next;
+    	}
+	}
     
     return;
 }
@@ -98,7 +99,7 @@ void add_tail(int newclisockfd, char* name_new, char* color_new, int roomnum) //
 
 		head->next = NULL;
 		tail = head;
-		// printf("Debug Message: Head = NULL\n");
+		printf("Debug Message: Head = NULL\n");
 	}
     else 
     {
@@ -240,7 +241,7 @@ int main(int argc, char *argv[])
         int room_num = 0;
 
         //add actual color code here
-        char* user_color = rand_color();
+        char* user_color = "red";
 		//printf("Debug Message: Color = %s\n", user_color);
 
         //pulling username from client input

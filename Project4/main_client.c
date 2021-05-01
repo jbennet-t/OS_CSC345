@@ -16,7 +16,7 @@
 #include <netdb.h> 
 #include <pthread.h>
 
-#define PORT_NUM 6669
+#define PORT_NUM 6111
 
 #define NUM_ROOMS 5
 #define MAX_PPL 4
