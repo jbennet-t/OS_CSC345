@@ -16,7 +16,7 @@
 #include <pthread.h>
 #include <ctype.h>
 
-#define PORT_NUM 1004
+#define PORT_NUM 6669
 
 void error(const char *msg)
 {
@@ -36,6 +36,31 @@ typedef struct _USR {
 USR *head = NULL;
 USR *tail = NULL;
 
+// Michael Ralea
+char* rand_color() {
+	int not_unique = 1;
+	int n;
+	char* options[4] = {"red", "blue", "green", "yellow"};
+	while (not_unique && head != NULL) {		// while color not found
+		USR* cur = head;
+		n = rand() % 4; 	// random number between 0 and 3
+		while (cur != NULL) {
+			if (options[n] != cur->color) {
+				cur = cur->next;
+			}
+			else {
+				break;
+			};
+
+			if (cur->next == NULL) {
+				not_unique = 0;
+			}
+		}
+	}
+	return options[n];
+}
+
+// Jordan Sinoway
 void print_clients()
 {
     USR* cur = head;
@@ -218,7 +243,7 @@ int main(int argc, char *argv[])
 
         //color
         //add actual color code here
-        char* user_color;
+        char* user_color = rand_color();
 
         //pulling username from client input
         char username[32];
