@@ -27,10 +27,9 @@ void error(const char *msg)
 typedef struct _USR {
 	int clisockfd;		// socket file descriptor
 	struct _USR* next;	// for linked list queue
-    char* username; //client's name
-    int room; //what chat room user is in
+    char* username; 	//client's name
+    int room; 			// what chat room user is in
     char* color;
-
 } USR;
 
 USR *head = NULL;
@@ -39,11 +38,11 @@ USR *tail = NULL;
 // Michael Ralea
 char* rand_color() {
 	int not_unique = 1;
-	int n;
-	char* options[4] = {"red", "blue", "green", "yellow"};
+	int n = rand() % 6;
+	char* options[6] = {"red", "blue", "green", "yellow", "orange", "pink"};
 	while (not_unique && head != NULL) {		// while color not found
 		USR* cur = head;
-		n = rand() % 4; 	// random number between 0 and 3
+		n = rand() %  6;	// random number between 0 and 3
 		while (cur != NULL) {
 			if (options[n] != cur->color) {
 				cur = cur->next;
@@ -63,8 +62,7 @@ char* rand_color() {
 // Jordan Sinoway
 void print_clients()
 {
-    USR* cur = head;
-
+    USR* cur = tail;
     printf("The following clients are connected: \n");
 
     while (cur != NULL)
@@ -100,7 +98,7 @@ void add_tail(int newclisockfd, char* name_new, char* color_new, int roomnum) //
 
 		head->next = NULL;
 		tail = head;
-
+		// printf("Debug Message: Head = NULL\n");
 	}
     else 
     {
@@ -241,10 +239,9 @@ int main(int argc, char *argv[])
         //add actual code here
         int room_num = 0;
 
-        //color
         //add actual color code here
         char* user_color = rand_color();
-		printf("Assigned color: %s\n", user_color);
+		//printf("Debug Message: Color = %s\n", user_color);
 
         //pulling username from client input
         char username[32];
