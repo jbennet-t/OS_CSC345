@@ -16,10 +16,8 @@
 #include <netdb.h> 
 #include <pthread.h>
 
-#define PORT_NUM 1004
+#define PORT_NUM 1006
 
-#define NUM_ROOMS 5
-#define MAX_PPL 4
 
 void error(const char *msg)
 {
@@ -30,6 +28,7 @@ void error(const char *msg)
 typedef struct _ThreadArgs {
 	int clisockfd;
 } ThreadArgs;
+
 
 void* thread_main_recv(void* args)
 {
@@ -105,6 +104,7 @@ int main(int argc, char *argv[])
 	int status = connect(sockfd, 
 			(struct sockaddr *) &serv_addr, slen);
 	if (status < 0) error("ERROR connecting");
+	printf("Your first message will be your username");
 
 	pthread_t tid1;
 	pthread_t tid2;
