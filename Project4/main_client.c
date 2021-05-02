@@ -16,7 +16,7 @@
 #include <netdb.h> 
 #include <pthread.h>
 
-#define PORT_NUM 1006
+#define PORT_NUM 1009
 
 
 void error(const char *msg)

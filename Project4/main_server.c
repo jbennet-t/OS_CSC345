@@ -16,7 +16,7 @@
 #include <pthread.h>
 #include <ctype.h>
 
-#define PORT_NUM 1006
+#define PORT_NUM 1009
 
 #define NUM_ROOMS 5
 #define MAX_PPL 4
@@ -131,18 +131,21 @@ void broadcast(int fromfd, char* message) /* broadcast message from one client t
 			break;
 		}
 		cur = cur->next;
-	
-    	cur = head;
+	}
+    
+	cur = head;
 		//checking all connected users
-
+	while(cur != NULL)
+	{
 		// check if cur is not the one who sent the message
         // also check if they are in the same room
-		if (cur->clisockfd != fromfd && cur->room == room) 
+		if (cur->clisockfd != fromfd) 
 		{
 			char buffer[512];
+			memset(buffer, 0, 512);
 
 			// prepare message
-			sprintf(buffer, "%s%s [%s]:%s", color, username, inet_ntoa(cliaddr.sin_addr), message);
+			sprintf(buffer, "[%s|%d| [%s]:%s]: %s", color, room, inet_ntoa(cliaddr.sin_addr), username, message);
 			int nmsg = strlen(buffer);
 
 			// send!
@@ -190,7 +193,7 @@ void* thread_main(void* args)
 			{
 				printf("User [%s] disconnected\n", cur->username);
 
-				roomList[cur->room]--;
+				roomList[(cur->room) - 1]--;
 
 				if(prev == NULL)
 				{
@@ -208,10 +211,8 @@ void* thread_main(void* args)
 		}
 		prev = cur;
 		cur = cur->next;
-	
 
 	}
-
 
 
 	while (nrcv > 0) {
@@ -266,8 +267,12 @@ int main(int argc, char *argv[])
         //add actual color code here
         char* user_color = "red";
 
+		//+1 to people in room
+		roomList[room_num-1] += 1;
+
         //pulling username from client input
         char username[32];
+
         memset(username, 0, 32); //setting memory
         int nrcv = recv(newsockfd, username, 32, 0);
         if(nrcv < 0)
