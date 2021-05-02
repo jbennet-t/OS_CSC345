@@ -16,7 +16,12 @@
 #include <pthread.h>
 #include <ctype.h>
 
-#define PORT_NUM 6111
+#define PORT_NUM 1011
+
+#define NUM_ROOMS 5
+#define MAX_PPL 4
+
+int roomList[NUM_ROOMS];
 
 void error(const char *msg)
 {
@@ -27,58 +32,55 @@ void error(const char *msg)
 typedef struct _USR {
 	int clisockfd;		// socket file descriptor
 	struct _USR* next;	// for linked list queue
-    char* username; 	//client's name
-    int room; 			// what chat room user is in
+    char* username; //client's name
+    int room; //what chat room user is in
     char* color;
 } USR;
 
 USR *head = NULL;
 USR *tail = NULL;
 
-// Michael Ralea
-char* rand_color() {
-	int not_unique = 1;
-	int n = rand() % 6;
-	char* options[6] = {"red", "blue", "green", "yellow", "orange", "pink"};
-	while (not_unique && head != NULL) {		// while color not found
-		USR* cur = head;
-		n = rand() %  6;	// random number between 0 and 3
-		while (cur != NULL) {
-			if (options[n] != cur->color) {
-				cur = cur->next;
-			}
-			else {
-				break;
-			};
-
-			if (cur->next == NULL) {
-				not_unique = 0;
+char* pick_color() {
+	char* color = "red";
+	char* options[MAX_PPL] = {"red", "yellow", "green", "blue"};
+	int n = rand() % 4;
+	int unique_flag = 0;
+	char* cur_color;
+	USR* cur = head;
+	while(unique_flag = 0) {		// do until color is unique
+		int n = rand() % MAX_PPL; 	// generate an index between
+		cur_color = cur->color;
+		while(cur != NULL) {		
+			if (options[n] == cur_color) {
+				unique_flag = 1;
 			}
 		}
 	}
 	return options[n];
 }
 
-// Jordan Sinoway
 void print_clients()
 {
     USR* cur = head;
+
     printf("The following clients are connected: \n");
 
-	if (head == NULL)
-    {
-        printf("No clients connected \n");
-    }
-    else {
-		while (cur != NULL)
-    	{
-        	printf("User: [%s] - Room: [%d]\n", cur->username, cur->room);
-        	cur = cur->next;
-    	}
+	if(head == NULL)
+	{
+		printf("No clients connected \n");
 	}
-    
+
+	else
+	{
+		while(cur != NULL)
+		{
+			printf("User: [%s] - [%d]\n", cur->username, cur->room);
+			cur = cur->next;
+		}
+	}
     return;
 }
+
 
 //adding user to end of linked list
 void add_tail(int newclisockfd, char* name_new, char* color_new, int roomnum) //added name, roomnum
@@ -99,7 +101,7 @@ void add_tail(int newclisockfd, char* name_new, char* color_new, int roomnum) //
 
 		head->next = NULL;
 		tail = head;
-		printf("Debug Message: Head = NULL\n");
+
 	}
     else 
     {
@@ -120,6 +122,7 @@ void add_tail(int newclisockfd, char* name_new, char* color_new, int roomnum) //
 	}
 }
 
+
 void broadcast(int fromfd, char* message) /* broadcast message from one client to other connected clients */
 {
 	// figure out sender address
@@ -135,31 +138,33 @@ void broadcast(int fromfd, char* message) /* broadcast message from one client t
 	// traverse through all connected clients
 	USR* cur = head;
 
-    while (cur != NULL) //checking for who sent message
+    while (cur != NULL) 
+	//checking for who sent message
     {
 		// check if cur IS who sent msg
 		if (cur->clisockfd == fromfd) 
         {
-			char buffer[512];
-
 			username = cur->username;
             color = cur->color;
             room = cur->room;
-
+			break;
 		}
-
 		cur = cur->next;
 	}
-    cur = head;
-	while (cur != NULL) 
-    {
+
+	cur = head;
+	//checking all connected users
+	while(cur != NULL)
+	{
 		// check if cur is not the one who sent the message
         // also check if they are in the same room
-		if ((cur->room == room) && (cur->clisockfd != fromfd)) {
+		if (cur->clisockfd != fromfd) 
+		{
 			char buffer[512];
+			memset(buffer, 0, 512);
 
 			// prepare message
-			sprintf(buffer, "[%s]:%s", inet_ntoa(cliaddr.sin_addr), message);
+			sprintf(buffer, "[%s|%d| [%s]:%s]: %s", color, room, inet_ntoa(cliaddr.sin_addr), username, message);
 			int nmsg = strlen(buffer);
 
 			// send!
@@ -190,7 +195,44 @@ void* thread_main(void* args)
 	int nsen, nrcv;
 
 	nrcv = recv(clisockfd, buffer, 255, 0);
-	if (nrcv < 0) error("ERROR recv() failed");
+
+	USR* cur = head;
+	USR* prev = NULL;
+
+	if(nrcv < 0)
+	{
+		error("ERROR recv() failed");
+	}
+	//------------------- checking for client disconnect --------------------------
+	else if(nrcv == 0) // == 0 implies user disconnected (?)
+	{
+		while(cur != NULL)
+		{
+			if(cur->clisockfd == clisockfd)
+			{
+				printf("User [%s] disconnected\n", cur->username);
+
+				roomList[(cur->room) - 1]--;
+
+				if(prev == NULL)
+				{
+					head = cur->next;
+					free(cur);
+				}
+				else
+				{
+					prev->next = cur->next;
+					free(cur);
+				}
+				break;
+				
+			}
+		}
+		prev = cur;
+		cur = cur->next;
+
+	}
+
 
 	while (nrcv > 0) {
 		// we send the message to everyone except the sender
@@ -198,6 +240,34 @@ void* thread_main(void* args)
 
 		nrcv = recv(clisockfd, buffer, 255, 0);
 		if (nrcv < 0) error("ERROR recv() failed");
+		else if(nrcv == 0) // == 0 implies user disconnected (?)
+	{
+		while(cur != NULL)
+		{
+			if(cur->clisockfd == clisockfd)
+			{
+				printf("User [%s] disconnected\n", cur->username);
+
+				roomList[(cur->room) - 1]--;
+
+				if(prev == NULL)
+				{
+					head = cur->next;
+					free(cur);
+				}
+				else
+				{
+					prev->next = cur->next;
+					free(cur);
+				}
+				break;
+				
+			}
+		}
+		prev = cur;
+		cur = cur->next;
+
+	}
 	}
 
 	close(clisockfd);
@@ -240,12 +310,16 @@ int main(int argc, char *argv[])
         //add actual code here
         int room_num = 0;
 
+        //color
         //add actual color code here
-        char* user_color = "red";
-		//printf("Debug Message: Color = %s\n", user_color);
+        char* user_color = pick_color();
+
+		//+1 to people in room
+		roomList[room_num-1] += 1;
 
         //pulling username from client input
         char username[32];
+
         memset(username, 0, 32); //setting memory
         int nrcv = recv(newsockfd, username, 32, 0);
         if(nrcv < 0)
@@ -272,4 +346,3 @@ int main(int argc, char *argv[])
 
 	return 0; 
 }
-

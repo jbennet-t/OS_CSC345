@@ -16,10 +16,8 @@
 #include <netdb.h> 
 #include <pthread.h>
 
-#define PORT_NUM 6111
+#define PORT_NUM 1011
 
-#define NUM_ROOMS 5
-#define MAX_PPL 4
 
 void error(const char *msg)
 {
@@ -30,6 +28,7 @@ void error(const char *msg)
 typedef struct _ThreadArgs {
 	int clisockfd;
 } ThreadArgs;
+
 
 void* thread_main_recv(void* args)
 {
@@ -70,7 +69,7 @@ void* thread_main_send(void* args)
 		// console or GUI to have a nice input window.
 
 
-		printf("\nPlease enter the message: ");
+		printf("\n[You]: ");
 
 		memset(buffer, 0, 256);
 		fgets(buffer, 255, stdin);
@@ -127,5 +126,3 @@ int main(int argc, char *argv[])
 
 	return 0;
 }
-
-
