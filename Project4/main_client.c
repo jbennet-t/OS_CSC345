@@ -16,7 +16,7 @@
 #include <netdb.h> 
 #include <pthread.h>
 
-#define PORT_NUM 1009
+#define PORT_NUM 1029
 
 
 void error(const char *msg)
@@ -46,7 +46,6 @@ void* thread_main_recv(void* args)
 		memset(buffer, 0, 512);
 		n = recv(sockfd, buffer, 512, 0);
 		if (n < 0) error("ERROR recv() failed");
-
 		printf("\n%s\n", buffer);
 	}
 
@@ -69,7 +68,7 @@ void* thread_main_send(void* args)
 		// console or GUI to have a nice input window.
 
 
-		printf("\nPlease enter the message: ");
+		printf("\n[You]: ");
 
 		memset(buffer, 0, 256);
 		fgets(buffer, 255, stdin);
@@ -87,7 +86,7 @@ void* thread_main_send(void* args)
 
 int main(int argc, char *argv[])
 {
-	if (argc < 2) error("Please speicify hostname");
+	if (argc < 2) error("Please specify hostname");
 
 	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sockfd < 0) error("ERROR opening socket");
@@ -126,5 +125,3 @@ int main(int argc, char *argv[])
 
 	return 0;
 }
-
-

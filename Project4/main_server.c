@@ -16,7 +16,7 @@
 #include <pthread.h>
 #include <ctype.h>
 
-#define PORT_NUM 1009
+#define PORT_NUM 1029
 
 #define NUM_ROOMS 5
 #define MAX_PPL 4
@@ -39,6 +39,26 @@ typedef struct _USR {
 
 USR *head = NULL;
 USR *tail = NULL;
+
+char* pick_color() {
+	char* color = "red";
+	char* options[MAX_PPL] = {"red", "yellow", "green", "blue"};
+	int n = rand() % 4;
+	int unique_flag = 0;
+	char* cur_color;
+	USR* cur = head;
+	// Generate random indexes between 0 and MAX_PPL until
+	while(unique_flag = 0) {		// do until color is unique
+		int n = rand() % MAX_PPL; 	// generate an index between
+		cur_color = cur->color;
+		while(cur != NULL) {		
+			if (options[n] == cur_color) {
+				unique_flag = 1;
+			}
+		}
+	}
+	return options[n];
+}
 
 void print_clients()
 {
@@ -106,6 +126,7 @@ void add_tail(int newclisockfd, char* name_new, char* color_new, int roomnum) //
 
 void broadcast(int fromfd, char* message) /* broadcast message from one client to other connected clients */
 {
+	printf("buffer: %s\n", message);
 	// figure out sender address
 	struct sockaddr_in cliaddr;
 	socklen_t clen = sizeof(cliaddr);
@@ -132,9 +153,9 @@ void broadcast(int fromfd, char* message) /* broadcast message from one client t
 		}
 		cur = cur->next;
 	}
-    
+
 	cur = head;
-		//checking all connected users
+	//checking all connected users
 	while(cur != NULL)
 	{
 		// check if cur is not the one who sent the message
@@ -165,70 +186,74 @@ void* thread_main(void* args)
 {
 	// make sure thread resources are deallocated upon return
 	pthread_detach(pthread_self());
-
 	// get socket descriptor from argument
 	int clisockfd = ((ThreadArgs*) args)->clisockfd;
 	free(args);
 
-	//-------------------------------
-	// Now, we receive/send messages
 	char buffer[256];
 	int nsen, nrcv;
 
 	nrcv = recv(clisockfd, buffer, 255, 0);
 
 	USR* cur = head;
-	USR* prev = NULL;
-
-	if(nrcv < 0)
-	{
-		error("ERROR recv() failed");
-	}
-	//------------------- checking for client disconnect --------------------------
-	else if(nrcv == 0) // == 0 implies user disconnected (?)
-	{
-		while(cur != NULL)
-		{
-			if(cur->clisockfd == clisockfd)
-			{
-				printf("User [%s] disconnected\n", cur->username);
-
-				roomList[(cur->room) - 1]--;
-
-				if(prev == NULL)
-				{
-					head = cur->next;
-					free(cur);
-				}
-				else
-				{
-					prev->next = cur->next;
-					free(cur);
-				}
-				break;
-				
-			}
+	USR* prev = head;
+	int temp_fd;
+	// find out which element in linked list we are on
+	while (cur != NULL) {
+		temp_fd = cur->clisockfd;
+		if (temp_fd == clisockfd) {
+			break;	// we have found the correct current struct
 		}
-		prev = cur;
+		if (cur != head) {
+			prev = prev->next;
+		}
 		cur = cur->next;
-
 	}
 
-
-	while (nrcv > 0) {
-		// we send the message to everyone except the sender
+	/* First message */
+	if (nrcv < 0) {		
+		printf("ERROR: recv() failed");
+	}
+	else if (nrcv == 0) {	// if user disconnects
+		printf("User [%s] DISCONNECTED\n", cur->username);
+		if (cur == head) {
+			head = cur->next;
+			free(cur);
+		}
+		else {
+			prev->next = cur->next;
+			free(cur);
+		}
+		close(clisockfd);
+		return NULL;
+	}
+	else {
 		broadcast(clisockfd, buffer);
-
-		nrcv = recv(clisockfd, buffer, 255, 0);
-		if (nrcv < 0) error("ERROR recv() failed");
 	}
 
+	/* All messages henceforth */
+	while (nrcv != 0) {
+		if (nrcv < 0) {		
+			error("ERROR: recv() failed");
+		}
+		else {
+			broadcast(clisockfd, buffer);
+		}
+		memset(buffer, 0, sizeof(buffer));
+		nrcv = recv(clisockfd, buffer, 255, 0);
+	}
+	printf("User [%s] DISCONNECTED\n", cur->username);
+	if (cur == head) {
+		head = cur->next;
+		free(cur);
+	}
+	else {
+		prev->next = cur->next;
+		free(cur);
+	}
 	close(clisockfd);
-	//-------------------------------
-
 	return NULL;
 }
-
 
 int main(int argc, char *argv[])
 {
@@ -265,7 +290,7 @@ int main(int argc, char *argv[])
 
         //color
         //add actual color code here
-        char* user_color = "red";
+        char* user_color = pick_color();
 
 		//+1 to people in room
 		roomList[room_num-1] += 1;
@@ -280,6 +305,8 @@ int main(int argc, char *argv[])
             error("Error recv() failed");
         }
 
+		username[strlen(username) - 1] = '\0';		// introduces weird bug where user attempts to connect but cannot
+
         printf("Connected: %s - %s\n", inet_ntoa(cli_addr.sin_addr), username);
 
 
@@ -292,11 +319,9 @@ int main(int argc, char *argv[])
         print_clients(); //print out list of clients
 		
 		args->clisockfd = newsockfd;
-
 		pthread_t tid;
 		if (pthread_create(&tid, NULL, thread_main, (void*) args) != 0) error("ERROR creating a new thread");
 	}
 
 	return 0; 
 }
-
