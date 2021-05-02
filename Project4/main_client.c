@@ -16,7 +16,7 @@
 #include <netdb.h> 
 #include <pthread.h>
 
-#define PORT_NUM 1011
+#define PORT_NUM 1029
 
 
 void error(const char *msg)
@@ -46,7 +46,6 @@ void* thread_main_recv(void* args)
 		memset(buffer, 0, 512);
 		n = recv(sockfd, buffer, 512, 0);
 		if (n < 0) error("ERROR recv() failed");
-
 		printf("\n%s\n", buffer);
 	}
 

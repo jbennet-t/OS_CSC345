@@ -31,6 +31,7 @@ void add_tail(int newclisockfd)
 		head->clisockfd = newclisockfd;
 		head->next = NULL;
 		tail = head;
+		printf("debug statement\n");
 	} else {
 		tail->next = (USR*) malloc(sizeof(USR));
 		tail->next->clisockfd = newclisockfd;
