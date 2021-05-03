@@ -45,6 +45,7 @@ char* pick_color() {
 	char* color = "red";
 	char* options[MAX_PPL] = {"\x1B[31m", "\x1B[32m", "\x1B[33m", "\x1B[34m", "\x1B[35m", "\x1B[36m", "\x1B[37m"}; 
 	//red, yellow, green, blue, magenta, cyan, white
+	//reference: https://www.theurbanpenguin.com/4184-2/
 	int n = rand() % 7;
 	int unique_flag = 0;
 	char* cur_color;
@@ -279,6 +280,7 @@ void broadcast(int fromfd, char* message)
 			// prepare message
 			sprintf(buffer, "\x1B[0m%s[|room:%d| [%s]:%s]: %s  \x1B[0m", color, room, inet_ntoa(cliaddr.sin_addr), username, message);
 			int nmsg = strlen(buffer);
+			//reference for above color codes: https://www.theurbanpenguin.com/4184-2/ 
 
 			// send!
 			int nsen = send(cur->clisockfd, buffer, nmsg, 0);

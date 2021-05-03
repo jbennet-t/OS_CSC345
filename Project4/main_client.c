@@ -213,6 +213,7 @@ int main(int argc, char *argv[])
 			for (int i = 0; i<strlen(menuBuffer) - 1; i++)
 			{
 				numRooms += (menuBuffer[i] == 9); //for each tab char, increases # rooms
+				//9 is tab in ASCII
 			}
 			//checking format of user's room input
 			while (1)
@@ -226,14 +227,17 @@ int main(int argc, char *argv[])
 				//initial room_indicated check didn't work, so using this old fashinoed check to look at char vals
 				//char 0 - 9 are 48 - 57
 				//if not 0-9, then its new or ___
+				//this section referenced from Stack Overflow: https://stackoverflow.com/questions/14941740/get-int-from-number-in-char-buffer
+				//--------------------------------------------
 				for (int i=0;i<strlen(buffer)-1;i++)
 				{
-					if ((buffer[i] < 48) || (buffer[i] > 57))
+					if ((buffer[i] > 57) || (buffer[i] > 48)) 
 					{
 						room_indicated2 = 0;
 						break;
 					}
 				}
+				//--------------------------------------------
 
 				if(strcmp(buffer,"new\n") == 0) //if buffer holds new, strcmp returns 0
 				{
@@ -257,8 +261,10 @@ int main(int argc, char *argv[])
 			}
 
 			// Send new room number
-			if (buffer[strlen(buffer)-1] == 10) 
+			if (buffer[strlen(buffer)-1] == 10)
+			{
 				buffer[strlen(buffer)-1] = '\0';//removing /n char
+			}
 
 			int n = send(sockfd, buffer, strlen(buffer), 0);
 			if (n < 0) error("ERROR writing to socket");
