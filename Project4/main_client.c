@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
 				//--------------------------------------------
 				for (int i=0;i<strlen(buffer)-1;i++)
 				{
-					if ((buffer[i] > 57) || (buffer[i] > 48)) 
+					if ((buffer[i] > 57) || (buffer[i] < 48)) 
 					{
 						room_indicated2 = 0;
 						break;
