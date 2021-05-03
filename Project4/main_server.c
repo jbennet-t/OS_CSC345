@@ -84,41 +84,36 @@ void print_clients()
     return;
 }
 
-int get_create_room(int clisockfd, struct sockaddr_in cli_addr, char* room, char *arg3)
+int get_create_room(int clisockfd, struct sockaddr_in cli_addr, char* room)
 {
-	int digitFlag = 1;
-	int noFlag = 0;
-	int roomNum;
-	/* Confirm whether every part of the message, besides \n, was an integer */
-	for (int i=0;i<strlen(room)-1;i++)
+	int room_indicated = 1; //default indicated
+	int no_input = 0;
+	int roomNum = atoi(room); //return either # or 0 if not a number
+
+
+	//check if "room" was a #
+	if(roomNum == 0)
 	{
-		if (room[i] < 48 || room[i] > 57) // chars 0 to 9 are 48 to 57
-		{
-			digitFlag = 0;
-			break;
-		}
+		room_indicated = 0; //something other than a #
 	}
 
-	// check if room was submitted as nothing
+	// check if room was empty
 	if (room[0] == 10)
 	{
-		digitFlag = 0;
-		noFlag = 1;
+		room_indicated = 0;
+		no_input = 1;
 	}
 
-	// room input is an integer room, check that it exists and return if true
-	if (digitFlag)
+	// arg3 was a room num, not "new" or ___
+	if(room_indicated)
 	{
-		// printf("Digit room specified\n");
 		roomNum = atoi(room);
 
-		// printf("roomNum: %d\n", roomNum);
-		// Check to see if room num is valid
+		// Check if room num is valid
 		if (roomNum > 0 && roomNum <= NUM_ROOMS && roomNum <= current_rooms) 
 		{
 			memset(room,0,256);
 			sprintf(room,"Success\n");
-			// Send junk array to client
 			int nmsg = strlen(room);
 			int nsen = send(clisockfd, room, nmsg, 0);
 			if (nsen != nmsg) error("ERROR send() failed");
@@ -127,21 +122,19 @@ int get_create_room(int clisockfd, struct sockaddr_in cli_addr, char* room, char
 		else // punish the client if invalid
 		{
 			memset(room,0,256);
-			sprintf(room,"Well this is unfortunate\n");
-			// Send junk array to client
+			sprintf(room,"Invalid room #\n");
 			int nmsg = strlen(room);
 			int nsen = send(clisockfd, room, nmsg, 0);
 			if (nsen != nmsg) error("ERROR send() failed");
 			return 0;
 		}
-		// else error("ERROR room number out of range or nonexistent");
 	}
 	// room input is a string, check that it = "new" and return new room number if true, broadcast to client
 	else
 	{
 		int newFlag = strcmp(room,"new");
 		// client asks for new room, create it
-		if ((newFlag == 0 && current_rooms < NUM_ROOMS) || (noFlag == 1 && current_rooms == 0))
+		if ((newFlag == 0 && current_rooms < NUM_ROOMS) || (no_input == 1 && current_rooms == 0))
 		{
 			// printf("Creating new room\n");
 			current_rooms += 1;
@@ -161,7 +154,7 @@ int get_create_room(int clisockfd, struct sockaddr_in cli_addr, char* room, char
 
 			return roomNum;
 		}
-		else if (noFlag == 1 && current_rooms != 0 && current_rooms < NUM_ROOMS) // client input nothing, prompt client to choose a room from a list
+		else if (no_input == 1 && current_rooms != 0 && current_rooms < NUM_ROOMS) // client input nothing, prompt client to choose a room from a list
 		{
 			// printf("No room specified from client\n");
 
@@ -201,7 +194,7 @@ int get_create_room(int clisockfd, struct sockaddr_in cli_addr, char* room, char
 			if (nrcv < 0) error("ERROR recv() failed");
 
 			// Get room num using a new call to the function
-			return get_create_room(clisockfd, cli_addr, newbuf, arg3);
+			return get_create_room(clisockfd, cli_addr, newbuf);
 		}
 	}
 	return 0;
@@ -407,7 +400,7 @@ int main(int argc, char *argv[])
 			(struct sockaddr*) &serv_addr, slen);
 	if (status < 0) error("ERROR on binding");
 
-	listen(sockfd, 5); // maximum number of connections = 5
+	listen(sockfd, 5); // maximum connections
 
 	while(1) 
     {
@@ -427,12 +420,12 @@ int main(int argc, char *argv[])
 		if (nrcv < 0) error("ERROR recv() failed");
 
 		// Get either a new or existing ROOM NUMBER
-		int room_num = get_create_room(newsockfd, cli_addr, room, argv[2]);
+		int room_num = get_create_room(newsockfd, cli_addr, room);
 		// if (roomNum == 0) error("ERROR getRoomNum() failed");
 		// getRoomNum failed - punish the client, not the server
 		if (room_num == 0)
 		{
-			printf("getRoomNum() failed oh no\n");
+			printf("Could not create or find room\n");
 			continue;
 		}
 

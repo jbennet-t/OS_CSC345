@@ -127,44 +127,44 @@ int main(int argc, char *argv[])
 
 	printf("Try connecting to %s...\n", inet_ntoa(serv_addr.sin_addr));
 
-	int status = connect(sockfd, 
-			(struct sockaddr *) &serv_addr, slen);
+	int status = connect(sockfd, (struct sockaddr *) &serv_addr, slen);
 	if (status < 0) error("ERROR connecting");
 	//printf("Your first message will be your username");
 
-	// see if the room number entered as an arg is a digit
-	int digitFlag = 1;
-	// send room number to server
+	int room_indicated = 1;//check if 3rd arg is a digit or not, default yes
 	char buffer[256];
-	// clear buffer
 	memset(buffer, 0, 256);
-	// set room number into buffer
-	if (argc > 2) strcpy(buffer, argv[2]);
+	if (argc > 2)
+	{
+		strcpy(buffer, argv[2]);//send 3rd arg to buffer for server side processing
+	}
 	else 
 	{
 		buffer[0] = 10;
-		digitFlag = 0;
+		room_indicated = 0;
 	}
 
-	// Error handling on bad room number arguments
-	/* Confirm whether every part of the message, besides \n, was an integer */
-	for (int i=0;i<strlen(buffer)-1;i++)
+	// checking for room numbers
+	int roomChk = atoi(buffer); //return either # or 0 if not a number
+
+	//check if "room" was a #
+	if(roomChk == 0)
 	{
-		if (buffer[i] < 48 || buffer[i] > 57) // chars 0 to 9 are 48 to 57
-		{
-			digitFlag = 0;
-			break;
-		}
+		room_indicated = 0; //something other than a #
 	}
-	// If client entered a string and it's not "new" punish them
-	if (argc > 2 && digitFlag == 0 && strcmp(buffer,"new") != 0) error("ERROR Invalid new");
+
+	// If user entered a 3rd arg thats not new or a #
+	if (argc > 2 && room_indicated == 0 && strcmp(buffer,"new") != 0)
+	{
+		error("ERROR Invalid new");
+	}
 
  	// send room number to server
 	status = send(sockfd, buffer, strlen(buffer), 0);
 	if (status < 0) error("ERROR writing to socket"); 
 
 	// make sure the room NUMBER you sent is valid
-	if (digitFlag)
+	if (room_indicated)
 	{
 	// printf("You entered a digit\n");
 		memset(buffer, 0, 256);
