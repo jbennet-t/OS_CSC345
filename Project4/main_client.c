@@ -88,7 +88,7 @@ void* thread_main_send(void* args)
 
 		if (strlen(buffer) == 1) buffer[0] = '\0';
 
-		if (buffer[strlen(buffer)-1] == 10) //maybe gets rid of \n?
+		if (buffer[strlen(buffer)-1] == 10) //gets rid of \n
 		{
 			buffer[strlen(buffer)-1] = '\0';
 		}
@@ -132,6 +132,8 @@ int main(int argc, char *argv[])
 	//printf("Your first message will be your username");
 
 	int room_indicated = 1;//check if 3rd arg is a digit or not, default yes
+	int new_flag = 0;
+
 	char buffer[256];
 	memset(buffer, 0, 256);
 	if (argc > 2)
@@ -140,8 +142,8 @@ int main(int argc, char *argv[])
 	}
 	else 
 	{
-		buffer[0] = 10;
-		room_indicated = 0;
+		buffer[0] = 10; //send 10 for server side check of non-digit
+		room_indicated = 0; //no room indicated or new
 	}
 
 	// checking for room numbers
@@ -153,30 +155,34 @@ int main(int argc, char *argv[])
 		room_indicated = 0; //something other than a #
 	}
 
-	// If user entered a 3rd arg thats not new or a #
-	if (argc > 2 && room_indicated == 0 && strcmp(buffer,"new") != 0)
+	if(strcmp(buffer,"new") == 0) //if buffer holds new, strcmp returns 0
+	{
+		new_flag = 1;
+	}
+
+	// If user entered a 3rd arg thats not new, ___, or a #
+	if (argc > 2 && room_indicated == 0 && new_flag == 0)
 	{
 		error("ERROR Invalid new");
 	}
 
- 	// send room number to server
+ 	// send room number or new or 10 to server
 	status = send(sockfd, buffer, strlen(buffer), 0);
 	if (status < 0) error("ERROR writing to socket"); 
 
-	// make sure the room NUMBER you sent is valid
+	// checking validity of room #
 	if (room_indicated)
 	{
-	// printf("You entered a digit\n");
 		memset(buffer, 0, 256);
 		int nrcv = recv(sockfd, buffer, 255, 0);
 		if (nrcv < 0) error("ERROR recv() failed");
 		printf("\n%s", buffer);
-		// if unsuccessful in finding a valid room, kill the client
-		if (strcmp(buffer,"Success\n") != 0) error("ERROR Invalid room number");
+		// if not valid room, return error to user
+		if(strcmp(buffer,"Connected Successfully\n") != 0) error("ERROR Invalid room number");
 	}
 
 	// print out new room number by receiving a room count from the server
-	if (strcmp(buffer,"new") == 0)
+	if(new_flag)
 	{
 		// printf("Client is getting a new room\n");
 		// Client receives a new room number and is announced through this recv()
@@ -185,55 +191,74 @@ int main(int argc, char *argv[])
 		if (nrcv < 0) error("ERROR recv() failed");
 		printf("\n%s\n", buffer);
 	}
-	else if (argc < 3) // "new" keyboard nor room number specified, prompt client to choose room OR automatically connect if this is first room created
+	else if (argc < 3) // no 3rd arg, so not new or #
+	// ask user or automatically connect if 1st user
 	{
-		// printf("Client must be prompted or is getting first room\n");
-		char bigbuf[4096];
-		memset(bigbuf, 0, 4096);
-		int nrcv = recv(sockfd, bigbuf, 4096, 0);
+		char menuBuffer[2048];
+		memset(menuBuffer, 0, 2048);
+
+		int nrcv = recv(sockfd, menuBuffer, 2048, 0);
 		if (nrcv < 0) error("ERROR recv() failed");
-		printf("\n%s\n", bigbuf);
 
-		char word[9]; // will hold the word "Connected" - the first word of a message that prints when you automatically join a room
-		strncpy(word, bigbuf, 9);
-		//printf("This is word: %s", word);
+		printf("\n-------------------------------------\n%s-------------------------------------\n", menuBuffer);
 
-		// Checking the contents of the output buffer is the easiest way I can check to see if this is the very first chat room being made
-		if (strcmp(word,"Connected") != 0)
+		char introMessage[9]; //holds "Connected" - printed when joining a room
+		strncpy(introMessage, menuBuffer, 9);
+
+		//check output buffer when first connecting to a room
+		if (strcmp(introMessage,"Connected") != 0)
 		{
-			// Count the number of rooms based on the number of lines from bigbuf
+			//gets # of rooms based on lines in menu bufer
 			int numRooms = 0;
-			for (int i=0;i<strlen(bigbuf)-1;i++)
+			for (int i = 0; i<strlen(menuBuffer) - 1; i++)
 			{
-				numRooms += (bigbuf[i] == 9); // check for TAB characters
+				numRooms += (menuBuffer[i] == 9); //for each tab char, increases # rooms
 			}
-			// printf("Number of rooms: %d\n", numRooms);
-			// Make sure client's input is in the right format
+			//checking format of user's room input
 			while (1)
 			{
-				// Client specifies room number or "new"
 				memset(buffer, 0, 256);
 				fgets(buffer, 255, stdin);
 
-				int digitFlag = 1;
-				/* Confirm whether every part of the message, besides \n, was an integer */
+				int room_indicated2 = 1;
+				int exist_flag = 0;
+				int new_flag2 = 0;
+				//initial room_indicated check didn't work, so using this old fashinoed check to look at char vals
+				//char 0 - 9 are 48 - 57
+				//if not 0-9, then its new or ___
 				for (int i=0;i<strlen(buffer)-1;i++)
 				{
-					if (buffer[i] < 48 || buffer[i] > 57) // chars 0 to 9 are 48 to 57
+					if ((buffer[i] < 48) || (buffer[i] > 57))
 					{
-						digitFlag = 0;
+						room_indicated2 = 0;
 						break;
 					}
 				}
-				// printf("digitFlag: %d\n", digitFlag);
-				// Did client enter a valid room number or "new"
-				if ((digitFlag && atoi(buffer) <= numRooms)|| strcmp(buffer,"new\n") == 0) break;
-				else printf("\nChoose a room number or type [new] to create a new room: ");
+
+				if(strcmp(buffer,"new\n") == 0) //if buffer holds new, strcmp returns 0
+				{
+					new_flag2 = 1;
+				}
+
+				if(atoi(buffer) <= numRooms) //if room num is an existing room
+				{
+					exist_flag = 1;
+				}
+
+				//check if existing room or new
+				if ((room_indicated2 && exist_flag) || new_flag2)
+				{
+					break;
+				}
+				else
+				{
+					printf("\nInput a room number or enter new to make a new room: \n");
+				}
 			}
 
 			// Send new room number
-			// Demolish that newline character \n
-			if (buffer[strlen(buffer)-1] == 10) buffer[strlen(buffer)-1] = '\0';
+			if (buffer[strlen(buffer)-1] == 10) 
+				buffer[strlen(buffer)-1] = '\0';//removing /n char
 
 			int n = send(sockfd, buffer, strlen(buffer), 0);
 			if (n < 0) error("ERROR writing to socket");

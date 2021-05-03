@@ -98,7 +98,7 @@ int get_create_room(int clisockfd, struct sockaddr_in cli_addr, char* room)
 	}
 
 	// check if room was empty
-	if (room[0] == 10)
+	if (room[0] == 10) //"10" passed from client to indicate empty
 	{
 		room_indicated = 0;
 		no_input = 1;
@@ -113,7 +113,8 @@ int get_create_room(int clisockfd, struct sockaddr_in cli_addr, char* room)
 		if (roomNum > 0 && roomNum <= NUM_ROOMS && roomNum <= current_rooms) 
 		{
 			memset(room,0,256);
-			sprintf(room,"Success\n");
+			sprintf(room,"Connected Successfully\n");
+
 			int nmsg = strlen(room);
 			int nsen = send(clisockfd, room, nmsg, 0);
 			if (nsen != nmsg) error("ERROR send() failed");
@@ -123,78 +124,66 @@ int get_create_room(int clisockfd, struct sockaddr_in cli_addr, char* room)
 		{
 			memset(room,0,256);
 			sprintf(room,"Invalid room #\n");
+
 			int nmsg = strlen(room);
 			int nsen = send(clisockfd, room, nmsg, 0);
 			if (nsen != nmsg) error("ERROR send() failed");
 			return 0;
 		}
 	}
-	// room input is a string, check that it = "new" and return new room number if true, broadcast to client
+	// else room is not a #, so its new or ___
 	else
 	{
-		int newFlag = strcmp(room,"new");
-		// client asks for new room, create it
-		if ((newFlag == 0 && current_rooms < NUM_ROOMS) || (no_input == 1 && current_rooms == 0))
+		int request_new = strcmp(room,"new");
+
+		if ((request_new == 0 && (current_rooms < NUM_ROOMS)) || (no_input == 1 && current_rooms == 0))
 		{
-			// printf("Creating new room\n");
 			current_rooms += 1;
 			roomNum = current_rooms;
 
-			// Send message of new chat room back to client
-			char buffer[256];
+			char buffer[256]; //pass connect msg to user
 			memset(buffer, 0, 256);
 			sprintf(buffer, "Connected to %s with new room number: %d\n", inet_ntoa(cli_addr.sin_addr), roomNum);
 
 			int nmsg = strlen(buffer);
 			int nsen = send(clisockfd, buffer, nmsg, 0);
 			if (nsen != nmsg) error("ERROR send() failed");
-
-			// Clear this again because we were having text problems
 			memset(buffer, 0, 256);
 
 			return roomNum;
 		}
-		else if (no_input == 1 && current_rooms != 0 && current_rooms < NUM_ROOMS) // client input nothing, prompt client to choose a room from a list
+		else if (no_input == 1 && current_rooms != 0 && current_rooms < NUM_ROOMS) 
+		//if not "new", its no input, so user needs to choose a room
 		{
-			// printf("No room specified from client\n");
+			char menuBuffer[2048]; //creating menuBuffer for showing user room menu
+			memset(menuBuffer, 0, 2048);
 
-			// Time to prompt user to choose a room
-			int maxLen = 4096;
-			// Create buffer array of all possible choices to send to client
-			char buffer[4096];
-			memset(buffer, 0, 4096);
-
-			// Start putting stuff in the buffer array
-			sprintf(buffer, "Available Rooms:\n If none are listed, please type new");
+			sprintf(menuBuffer, "Open Rooms:\n If none are listed, please type new\n");
 			for (int i=0;i<current_rooms;i++)
 			{
 				char room[32];
 				int people = roomList[i];
 
-				// Create a string for each room
-				if (people > 1 || people == 0) sprintf(room, "\tRoom %d: %d people\n", i+1, people);
-				else sprintf(room, "\tRoom %d: %d person\n", i+1, people);
+				//make new line for each room
+				if (people > 1 || people == 0) sprintf(room, "\tRoom #%d: %d users connected\n", i+1, people);
+				else sprintf(room, "\tRoom #%d: %d users connected\n", i+1, people);
 
-				// Add room string to buffer array
-				if (strlen(buffer) + strlen(room) < maxLen) strcat(buffer, room);
-				else error("ERROR max length of room decision string exceeded");
+				if (strlen(menuBuffer) + strlen(room) < sizeof(menuBuffer)) strcat(menuBuffer, room);//add line to menuBuffer
+				else error("ERROR too many chars in line");
 			}
 
-			strcat(buffer, "Choose a room number or type [new] to create a new room: ");
+			strcat(menuBuffer, "Input a room number or enter 'new' to make a new room: \n");
 
-			// Send prompt to client and let them choose a room
-			int nmsg = strlen(buffer);
-			int nsen = send(clisockfd, buffer, nmsg, 0);
+			int nmsg = strlen(menuBuffer);
+			int nsen = send(clisockfd, menuBuffer, nmsg, 0);//send menuBuffer to client
 			if (nsen != nmsg) error("ERROR send() failed");
 
-			// Get new input from client
-			char newbuf[256];
-			memset(newbuf, 0, 256);
-			int nrcv = recv(clisockfd, newbuf, 255, 0);
+			char requestBuff[256]; //getting room request from client
+			memset(requestBuff, 0, 256);
+			int nrcv = recv(clisockfd, requestBuff, 255, 0);
 			if (nrcv < 0) error("ERROR recv() failed");
 
-			// Get room num using a new call to the function
-			return get_create_room(clisockfd, cli_addr, newbuf);
+			return get_create_room(clisockfd, cli_addr, requestBuff);//send back to top to enter room #
 		}
 	}
 	return 0;
@@ -241,19 +230,17 @@ void add_tail(int newclisockfd, char* name_new, char* color_new, int roomnum) //
 	}
 }
 
-
-void broadcast(int fromfd, char* message) /* broadcast message from one client to other connected clients */
+//send msg from one client to other clients in room
+void broadcast(int fromfd, char* message)
 {
-	//printf("buffer: %s\n", message);
 	// figure out sender address
 	struct sockaddr_in cliaddr;
 	socklen_t clen = sizeof(cliaddr);
 	if (getpeername(fromfd, (struct sockaddr*)&cliaddr, &clen) < 0) error("ERROR Unknown sender!");
 
-    //check username, color, and room # of sending client
-    char* username;
-    char* color;
-    int room;
+    char* username; //username of client
+    char* color; //color assigned to client
+    int room; //room where they are
 
 	// traverse through all connected clients
 	USR* cur = head;
@@ -285,7 +272,6 @@ void broadcast(int fromfd, char* message) /* broadcast message from one client t
 			//char* color_temp;
 			//strcat(color_temp, "\x1B[0m");
 			//strcat(color_temp, color);
-
 
 			char buffer[512];
 			memset(buffer, 0, 512);
@@ -336,7 +322,8 @@ void* thread_main(void* args)
 	}
 
 	/* First message */
-	if (nrcv < 0) {		
+	if (nrcv < 0) 
+	{		
 		printf("ERROR: recv() failed");
 	}
 	else if (nrcv == 0) {	// if user disconnects
@@ -412,18 +399,16 @@ int main(int argc, char *argv[])
 
         printf("New Client Connecting...\n");
 
-		// Temporarily link with just-created client to retrieve room number
 		char room[256];
-		// Clear array for new room number and receive room number from client
 		memset(room, 0, 256);
+		//getting room # from client
 		int nrcv = recv(newsockfd, room, 255, 0);
 		if (nrcv < 0) error("ERROR recv() failed");
 
-		// Get either a new or existing ROOM NUMBER
 		int room_num = get_create_room(newsockfd, cli_addr, room);
-		// if (roomNum == 0) error("ERROR getRoomNum() failed");
-		// getRoomNum failed - punish the client, not the server
-		if (room_num == 0)
+		//^ get room number or create new room based on client request
+
+		if (room_num == 0) //if get_create_room failed
 		{
 			printf("Could not create or find room\n");
 			continue;
